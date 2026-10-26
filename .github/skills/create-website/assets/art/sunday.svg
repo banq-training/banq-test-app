@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .tw { transform-box: fill-box; transform-origin: center; animation: twinkle 2.2s ease-in-out infinite; }
+    .t2 { animation-delay: 0.7s; } .t3 { animation-delay: 1.4s; }
+    .moon { transform-origin: 30px 34px; animation: sway 5s ease-in-out infinite; }
+    @keyframes twinkle { 50% { transform: scale(0.5); opacity: 0.4; } }
+    @keyframes sway { 50% { transform: rotate(-6deg); } }
+    @media (prefers-reduced-motion: reduce) { .tw, .moon { animation: none; } }
+  </style>
+  <path class="moon" d="M36 10a22 22 0 1 0 18 34A18 18 0 0 1 36 10z" fill="#9aa5ce"/>
+  <path class="tw" d="M50 7l1.5 3.5L55 12l-3.5 1.5L50 17l-1.5-3.5L45 12l3.5-1.5z" fill="#f6bd60"/>
+  <path class="tw t2" d="M14 10l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z" fill="#f6bd60"/>
+  <circle class="tw t3" cx="54" cy="28" r="2" fill="#f6bd60"/>
+</svg>

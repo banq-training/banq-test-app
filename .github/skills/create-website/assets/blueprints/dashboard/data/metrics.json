@@ -1,0 +1,12 @@
+{
+  "measure": "Requests",
+  "groups": ["Northeast", "South", "Midwest", "West"],
+  "items": [
+    { "id": "m1", "month": "Jan", "values": [120, 95, 80, 105], "onTime": 91 },
+    { "id": "m2", "month": "Feb", "values": [130, 98, 85, 110], "onTime": 92 },
+    { "id": "m3", "month": "Mar", "values": [142, 104, 88, 118], "onTime": 90 },
+    { "id": "m4", "month": "Apr", "values": [150, 110, 92, 125], "onTime": 93 },
+    { "id": "m5", "month": "May", "values": [158, 115, 97, 131], "onTime": 94 },
+    { "id": "m6", "month": "Jun", "values": [165, 121, 101, 138], "onTime": 95 }
+  ]
+}

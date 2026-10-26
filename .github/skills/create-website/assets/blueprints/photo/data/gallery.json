@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "file": "gallery/morning-mug.jpg",
+      "title": "Morning mug"
+    },
+    {
+      "file": "gallery/sleepy-cat.jpg",
+      "title": "Sleepy cat"
+    },
+    {
+      "file": "gallery/blue-bicycle.jpg",
+      "title": "Blue bicycle"
+    },
+    {
+      "file": "gallery/misty-lake.jpg",
+      "title": "Misty lake"
+    },
+    {
+      "file": "gallery/fruit-bowl.jpg",
+      "title": "Fruit bowl"
+    },
+    {
+      "file": "gallery/happy-puppy.jpg",
+      "title": "Happy puppy"
+    }
+  ]
+}

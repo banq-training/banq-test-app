@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120">
+  <style>
+    .stack { animation: float 5s ease-in-out infinite; }
+    .row { animation: slide 6s ease-in-out infinite; }
+    .r2 { animation-delay: 0.4s; } .r3 { animation-delay: 0.8s; }
+    .stamp { transform-origin: 124px 86px; animation: stamp 6s ease-in-out infinite; }
+    @keyframes float { 50% { transform: translateY(-4px); } }
+    @keyframes slide { 0%, 100% { transform: none; } 45%, 60% { transform: translateX(4px); } }
+    @keyframes stamp { 0%, 30% { transform: scale(0); opacity: 0; } 40% { transform: scale(1.15); opacity: 1; } 48%, 88% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .stack, .row { animation: none; } .stamp { animation: none; opacity: 1; } }
+  </style>
+  <g class="stack">
+    <rect x="18" y="16" width="112" height="90" rx="12" fill="#ffffff" opacity="0.95"/>
+    <rect x="30" y="27" width="46" height="7" rx="3.5" fill="#264653"/>
+    <g class="row">
+      <rect x="30" y="42" width="88" height="16" rx="6" fill="#e9f5f2"/>
+      <circle cx="39" cy="50" r="4" fill="#2a9d8f"/>
+      <rect x="48" y="47" width="38" height="6" rx="3" fill="#c7d8e6"/>
+      <rect x="94" y="46" width="18" height="8" rx="4" fill="#2a9d8f"/>
+    </g>
+    <g class="row r2">
+      <rect x="30" y="62" width="88" height="16" rx="6" fill="#fff4c2"/>
+      <circle cx="39" cy="70" r="4" fill="#f4a261"/>
+      <rect x="48" y="67" width="30" height="6" rx="3" fill="#c7d8e6"/>
+      <rect x="94" y="66" width="18" height="8" rx="4" fill="#f4a261"/>
+    </g>
+    <g class="row r3">
+      <rect x="30" y="82" width="88" height="16" rx="6" fill="#fde4dc"/>
+      <circle cx="39" cy="90" r="4" fill="#e4572e"/>
+      <rect x="48" y="87" width="34" height="6" rx="3" fill="#c7d8e6"/>
+      <rect x="94" y="86" width="18" height="8" rx="4" fill="#e4572e"/>
+    </g>
+  </g>
+  <g class="stamp">
+    <circle cx="124" cy="86" r="17" fill="#2a9d8f" stroke="#ffffff" stroke-width="3"/>
+    <path d="M116 86l6 6 10-11" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

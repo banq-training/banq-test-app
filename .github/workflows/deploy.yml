@@ -1,0 +1,195 @@
+name: Deploy my app
+run-name: Deploy my app [${{ inputs.rehearsal_id || github.ref_name }}]
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Learner website or separate read-only vendor app
+        type: choice
+        options:
+          - website
+          - vendor
+        default: website
+      connect_dataverse:
+        description: Optional post-workshop Dataverse connection; owner preparation required
+        type: boolean
+        default: false
+      rehearsal_id:
+        description: Optional correlation ID for an automated rehearsal
+        type: string
+        default: ""
+      expected_sha:
+        description: Optional exact commit required by an automated rehearsal
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  RESOURCE_GROUP: rg-nn-hackathon-2026-10
+  ENVIRONMENT: cae-hackathon
+  REGISTRY: acrnnhackathon2026
+  DEPLOY_TARGET: ${{ inputs.target || 'website' }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check prepared access and requested commit
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          CONNECT_DATAVERSE: ${{ inputs.connect_dataverse }}
+          DATAVERSE_URL: ${{ vars.DATAVERSE_URL }}
+          DATAVERSE_CLIENT_ID: ${{ vars.DATAVERSE_CLIENT_ID }}
+          DATAVERSE_TENANT_ID: ${{ vars.DATAVERSE_TENANT_ID }}
+          DATAVERSE_CLIENT_SECRET: ${{ secrets.DATAVERSE_CLIENT_SECRET }}
+        run: |
+          case "$DEPLOY_TARGET" in website|vendor) ;; *) echo "::error::Unknown deployment target"; exit 1 ;; esac
+          if [ "$DEPLOY_TARGET" = website ] && [ "$CONNECT_DATAVERSE" = true ]; then
+            echo "::error::Dataverse is only available on the separate vendor target."
+            exit 1
+          fi
+          : "${AZURE_CREDENTIALS:?The owner must grant this repository access to the prepared Actions secret; attendee Azure login is not required}"
+          if [ -n "$EXPECTED_SHA" ] && [ "$EXPECTED_SHA" != "$GITHUB_SHA" ]; then
+            echo "::error::The branch moved after the rehearsal checks. Test and dispatch the intended commit again."
+            exit 1
+          fi
+          if [ "$CONNECT_DATAVERSE" = "true" ]; then
+            : "${DATAVERSE_URL:?Set the DATAVERSE_URL Actions variable}"
+            : "${DATAVERSE_CLIENT_ID:?Set the DATAVERSE_CLIENT_ID Actions variable}"
+            : "${DATAVERSE_TENANT_ID:?Set the DATAVERSE_TENANT_ID Actions variable}"
+            : "${DATAVERSE_CLIENT_SECRET:?Set the DATAVERSE_CLIENT_SECRET Actions secret}"
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.7"
+
+      - name: Test before deployment
+        run: |
+          uv sync --locked --extra dev --extra web
+          uv run ruff check .
+          uv run pytest
+
+      - name: Read config.json
+        id: config
+        run: |
+          python app/config.py --target "$DEPLOY_TARGET" >> "$GITHUB_OUTPUT"
+          python app/config.py --target "$DEPLOY_TARGET"
+
+      - name: Validate learner website assets
+        if: ${{ env.DEPLOY_TARGET == 'website' }}
+        run: uv run --no-sync python -m app.site --check
+
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Check the prepared Azure resources
+        run: |
+          az containerapp env show --name "$ENVIRONMENT" --resource-group "$RESOURCE_GROUP" --output none
+          az acr show --name "$REGISTRY" --output none
+
+      - name: Build the image
+        run: |
+          DOCKERFILE=Dockerfile
+          if [ "$DEPLOY_TARGET" = website ]; then DOCKERFILE=Dockerfile.website; fi
+          az acr build \
+            --registry "$REGISTRY" \
+            --file "$DOCKERFILE" \
+            --image "vendorapp/${{ steps.config.outputs.appName }}:${{ github.sha }}" \
+            .
+
+      - name: Deploy to Container Apps
+        run: |
+          APP="${{ steps.config.outputs.appName }}"
+          IMAGE="$REGISTRY.azurecr.io/vendorapp/$APP:${{ github.sha }}"
+          if az containerapp show -n "$APP" -g "$RESOURCE_GROUP" >/dev/null 2>&1; then
+            az containerapp update -n "$APP" -g "$RESOURCE_GROUP" --image "$IMAGE" \
+              --set-env-vars "WORKSHOP_COMMIT=$GITHUB_SHA" "WORKSHOP_ALLOW_WRITES=false" --output none
+          else
+            az containerapp create \
+              -n "$APP" -g "$RESOURCE_GROUP" \
+              --environment "$ENVIRONMENT" \
+              --image "$IMAGE" \
+              --target-port 8000 \
+              --ingress external \
+              --registry-server "$REGISTRY.azurecr.io" \
+              --env-vars "WORKSHOP_COMMIT=$GITHUB_SHA" "WORKSHOP_ALLOW_WRITES=false" \
+              --min-replicas 0 --max-replicas 1 --output none
+          fi
+
+      - name: Keep unconnected targets free of Dataverse environment values
+        if: ${{ !inputs.connect_dataverse }}
+        run: |
+          az containerapp update -n "${{ steps.config.outputs.appName }}" -g "$RESOURCE_GROUP" \
+            --remove-env-vars DATAVERSE_URL DATAVERSE_CLIENT_ID DATAVERSE_TENANT_ID DATAVERSE_CLIENT_SECRET \
+            --output none
+
+      - name: Configure the optional post-workshop Dataverse connection
+        if: ${{ env.DEPLOY_TARGET == 'vendor' && inputs.connect_dataverse }}
+        env:
+          APP: ${{ steps.config.outputs.appName }}
+          DATAVERSE_URL: ${{ vars.DATAVERSE_URL }}
+          DATAVERSE_CLIENT_ID: ${{ vars.DATAVERSE_CLIENT_ID }}
+          DATAVERSE_TENANT_ID: ${{ vars.DATAVERSE_TENANT_ID }}
+          DATAVERSE_CLIENT_SECRET: ${{ secrets.DATAVERSE_CLIENT_SECRET }}
+        run: |
+          : "${DATAVERSE_URL:?Set the DATAVERSE_URL Actions variable}"
+          : "${DATAVERSE_CLIENT_ID:?Set the DATAVERSE_CLIENT_ID Actions variable}"
+          : "${DATAVERSE_TENANT_ID:?Set the DATAVERSE_TENANT_ID Actions variable}"
+          : "${DATAVERSE_CLIENT_SECRET:?Set the DATAVERSE_CLIENT_SECRET Actions secret}"
+          az containerapp secret set -n "$APP" -g "$RESOURCE_GROUP" \
+            --secrets "dataverse-client-secret=$DATAVERSE_CLIENT_SECRET" --output none
+          az containerapp update -n "$APP" -g "$RESOURCE_GROUP" \
+            --set-env-vars "DATAVERSE_URL=$DATAVERSE_URL" \
+              "DATAVERSE_CLIENT_ID=$DATAVERSE_CLIENT_ID" \
+              "DATAVERSE_TENANT_ID=$DATAVERSE_TENANT_ID" \
+              "DATAVERSE_CLIENT_SECRET=secretref:dataverse-client-secret" --output none
+
+      - name: Verify and publish the URL
+        env:
+          CONNECT_DATAVERSE: ${{ inputs.connect_dataverse }}
+        run: |
+          FQDN=$(az containerapp show -n "${{ steps.config.outputs.appName }}" \
+            -g "$RESOURCE_GROUP" --query properties.configuration.ingress.fqdn -o tsv)
+          test -n "$FQDN"
+          curl --fail --silent --show-error --retry 6 --retry-delay 5 \
+            --max-time 30 "https://$FQDN/healthz"
+          uv run --no-sync python -m scripts.deployment_result --url "https://$FQDN" \
+            --output deployment-result.json
+          echo "### Your app is live" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://$FQDN" >> "$GITHUB_STEP_SUMMARY"
+          echo "Verified commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deployment target: $DEPLOY_TARGET" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$DEPLOY_TARGET" = website ]; then
+            echo "Source: learner website assets; browser storage is private to each browser and origin." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$CONNECT_DATAVERSE" = true ]; then
+            echo "Source: Dataverse" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Source: local synthetic samples" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "Azure sign-in ran in Actions using the prepared identity; attendees do not sign into Azure." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload verified deployment result
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: deployment-result.json
+          if-no-files-found: error
+          retention-days: 7

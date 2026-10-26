@@ -1,0 +1,67 @@
+name: Codespace image
+
+# Builds the ready-made image that attendee Codespaces download instead of installing tools
+# at start-up. Only the template repository publishes it; attendee copies skip this job.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/codespace-image/**
+      - .github/workflows/codespace-image.yml
+      - pyproject.toml
+      - uv.lock
+      - .devcontainer/website-preview/package.json
+      - .devcontainer/website-preview/package-lock.json
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: codespace-image
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/agentic-dev-labs/copilot-hackathon-codespace
+
+jobs:
+  build:
+    if: github.repository == 'agentic-dev-labs/copilot-hackathon-template'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the image
+        run: |
+          docker buildx build --file .github/codespace-image/Dockerfile \
+            --tag "$IMAGE:latest" --load .
+      - name: Check that a Codespace start needs no downloads
+        run: |
+          docker run --rm --user vscode --network none --volume "$PWD:/src:ro" "$IMAGE:latest" \
+            bash -o pipefail -c '
+              set -eu
+              cp -r /src /tmp/work && cd /tmp/work
+              uv sync --locked --extra dev --extra web --offline
+              npm ci --offline --prefix .devcontainer/website-preview --ignore-scripts --no-audit --no-fund
+              .venv/bin/python -c "import fastapi, pytest, uvicorn, yaml, vendor_assurance"
+              python3 --version
+              node --version
+              gh --version
+              git --version
+            '
+      - name: Check that Copilot CLI installs after start
+        run: |
+          docker run --rm --user vscode --volume "$PWD:/src:ro" "$IMAGE:latest" \
+            bash -o pipefail -c 'cp -r /src /tmp/work && cd /tmp/work && bash -o pipefail .devcontainer/setup.sh cli'
+      - name: Publish the image with zstd layers
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+          # zstd layers unpack faster than gzip on Codespaces machines.
+          docker buildx build --file .github/codespace-image/Dockerfile \
+            --output "type=image,\"name=$IMAGE:latest,$IMAGE:${{ github.sha }}\",push=true,compression=zstd,compression-level=3,force-compression=true,oci-mediatypes=true" .
+          printf 'Published %s:latest and %s:%s\n' "$IMAGE" "$IMAGE" "${{ github.sha }}"

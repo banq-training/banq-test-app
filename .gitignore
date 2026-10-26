@@ -1,0 +1,32 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+/rehearsal/results/
+/travel/output/
+/research/
+.workshop-preview/
+.venv/
+.venv-research/
+node_modules/
+dist/
+build/
+.playwright-mcp/
+# Root only, so an agent can commit its reports under reports/
+/PrivacyReview_*.md
+logs/
+NN-NA-Hackathon-2026-10-Engagement-Brief.md
+*.private.md
+.env
+.env.*
+*.env
+!.env.example
+*.vsix
+# Facilitator preparation notes stay in the owner's Codespace; they are not part of the template.
+/.facilitator/
+# David's slides, the week plan and the delivery script stay on the owner's machine too.
+/final-workshop-david/
+# site/ is deliberately NOT ignored: attendees save and push their website there, and every
+# attendee repository gets a copy of this file. The template keeps only site/README.md: in the
+# template's own Codespace, .devcontainer/hide-template-demo.sh hides a demo site locally, and
+# CI fails if one is committed to the template.

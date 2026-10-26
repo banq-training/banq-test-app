@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .glow { transform-origin: 32px 25px; animation: glow 2s ease-in-out infinite; }
+    .ray { stroke: #f6bd60; stroke-width: 3; stroke-linecap: round; animation: blink 2s ease-in-out infinite; }
+    @keyframes glow { 50% { transform: scale(1.15); opacity: 0.3; } }
+    @keyframes blink { 50% { opacity: 0.2; } }
+    @media (prefers-reduced-motion: reduce) { .glow, .ray { animation: none; } }
+  </style>
+  <circle class="glow" cx="32" cy="25" r="18" fill="#fde8a6" opacity="0.6"/>
+  <line class="ray" x1="32" y1="2" x2="32" y2="5"/>
+  <line class="ray" x1="8" y1="25" x2="11" y2="25"/>
+  <line class="ray" x1="53" y1="25" x2="56" y2="25"/>
+  <line class="ray" x1="15" y1="8" x2="17" y2="10"/>
+  <line class="ray" x1="49" y1="8" x2="47" y2="10"/>
+  <path d="M32 9a15 15 0 0 0-9 27c2 2 3 4 3 7h12c0-3 1-5 3-7a15 15 0 0 0-9-27z" fill="#f6bd60"/>
+  <path d="M28 40l2-9 2 4 2-4 2 9" fill="none" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="26" y="45" width="12" height="4" rx="1" fill="#8d99ae"/>
+  <rect x="27" y="50" width="10" height="5" rx="2.5" fill="#8d99ae"/>
+</svg>

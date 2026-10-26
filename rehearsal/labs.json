@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "labs": [
+    {
+      "id": "00",
+      "title": "Foundations, files, Chat, and the first saved website",
+      "guide": "docs/DAY-1.md",
+      "tests": [
+        "tests/test_devcontainer.py",
+        "tests/test_app_config.py"
+      ],
+      "checks": {
+        "fresh-install": "Fresh-cache locked core installation succeeds; on-create Copilot CLI and the Website preview helper verified separately; no Chromium or research dependency startup requirement",
+        "access": "GitHub and editor Chat work with the intended attendee account",
+        "orientation": "Concepts-only GitHub tour from the Day 1 guide that attendees watch; at 09:30 an attendee-like account made a private copy of the template in agentic-dev-labs with Use this template, and the guide was opened with Open Preview in browser-based Codespaces before terminal use",
+        "chat-turn": "A real editor Chat request and refinement completed without terminal setup",
+        "first-website": "10:00 block from the Day 1 guide: actual /create-website invocation asked only which website (six starters or My own idea) and built the tested blueprint named after the repository, with no notes file; every file staged, committed, pushed, and site/index.html read back on the same branch on GitHub"
+      }
+    },
+    {
+      "id": "01",
+      "title": "A second website and manual verification",
+      "guide": "docs/DAY-1.md",
+      "tests": [
+        "tests/test_lab_contracts.py"
+      ],
+      "checks": {
+        "own-idea": "After the first page was pushed, /create-website built a second website (another starter by description, or an own idea) from one sentence in site/ideas/<name>/ straight away, without asking for checks first; the first page was unchanged and /start-website still opened it",
+        "preview": "Actual Website preview panel renders beside Chat, updates by itself on changes with added entries kept, and stop/start reopens the same saved page without file changes; blockers recorded truthfully",
+        "manual-behaviour": "Coached 11:45 block: expected-versus-observed manual button check, with real fixes rechecked",
+        "source-check": "Coached 11:45 block: the starter's count, or Weather against its raw forecast data, checked by the learner, not the model's confidence"
+      },
+      "optional_checks": {
+        "read-code": "Optional: Chat explained selected lines of site/index.html, and the learner changed the <h1> headline by hand; the preview updated after saving and a broken edit was recoverable with Ctrl+Z",
+        "research-mcp": "Selected optional browser and document tools actually invoked; installation alone is insufficient",
+        "browser-download": "Playwright inspected the official archive and at least one actual PDF download and reporting year; remaining years and blockers recorded truthfully",
+        "conversion": "A real MarkItDown conversion inspected; complete file output retained and any CLI fallback or truncation distinguished from MCP success",
+        "facts": "Comparable facts checked against original public sources with years, units, locations, calculations, and live/prepared labels",
+        "visual-brief": "Optional visual-brief invoked with verified facts without overwriting the learner's site; charts, references, navigation, and layout checked"
+      }
+    },
+    {
+      "id": "02",
+      "title": "Useful interaction and personal improvement",
+      "guide": "docs/DAY-1.md",
+      "tests": [
+        "tests/test_site.py"
+      ],
+      "checks": {
+        "implementation": "A chart from /add-chart (or /add-chat, or a workshop picture) added to an existing page, drawn from its own fictional entries, with safe text handling",
+        "personalisation": "Chosen Project Planner, Calendar, Ideas Wall, Weather, Princeton Map, Photo Studio, or own-idea page gets the chosen chart or chat and one visual improvement through ordinary Chat, without repeating creation or switching frameworks; actual diff and page inspected",
+        "manual-checks": "The chart followed a manual add/tick or equivalent journey and matched the learner's own count, or a chat answer was compared with the page; keyboard access and narrow layout checked honestly",
+        "preview": "Learner reopened the private preview and recorded actual results and remaining limitations",
+        "undo": "A deliberately bold Copilot change was reverted with Chat's Undo and the page returned to its previous state"
+      },
+      "optional_checks": {
+        "storage": "If selected, add/reload/present/remove/reload observed in one browser; corrupt or unavailable storage handled without clearing other apps' data",
+        "sketch": "Optional: docs/images/sketch-example.png attached to Chat and the page restyled toward it with entries and features kept; a model without image input recorded as blocked, not passed",
+        "ai-picture": "Optional: a picture drawn by the workshop helper was placed in the page from a plain Chat request; a Codespace without the secrets recorded as blocked, not passed"
+      }
+    },
+    {
+      "id": "08",
+      "title": "Save, share, and keep building",
+      "guide": "docs/DAY-1.md",
+      "tests": [
+        "tests/test_workflows.py",
+        "tests/test_app_config.py",
+        "tests/test_site.py"
+      ],
+      "checks": {
+        "reviewed-files": "Selected changes and site assets exclude private material, credentials, full reports, and unrelated changes",
+        "reviewed-commit": "Reviewed work pushed and read back on the intended GitHub branch through the beginner workflow",
+        "checked-feature": "Private preview still works after the last improvement; learner explains an actual check and limitation",
+        "no-azure-login": "No attendee Azure login or credential creation used; publication is not required for Monday",
+        "github-tour": "Commit message generated with the sparkle icon and corrected, pushed, and the commit list, one commit's changes, and the History of site/index.html found on GitHub"
+      },
+      "optional_checks": {
+        "actions": "Deploy workflow succeeded for that commit using the prepared runner identity",
+        "endpoint": "Website-target artifact and fresh responses match the exact commit, label, entry-page bytes, and site fingerprint; no vendor-app substitution",
+        "deployed-behaviour": "Chosen interaction verified at the actual new deployment URL, not just the health endpoint",
+        "deployed-storage": "Only if storage was selected, its journey repeated at the deployment origin without assuming preview state transfers",
+        "challenge": "A bronze, silver, or gold challenge-card level completed and checked by the learner",
+        "bonus": "Optional bonus: the afternoon feature not picked first (a chart, /add-chat, or a picture) added and checked against the page"
+      }
+    },
+    {
+      "id": "day-2",
+      "title": "Supported own-idea build and handover",
+      "guide": "docs/DAY-2.md",
+      "tests": [
+        "tests/test_lab_contracts.py",
+        "tests/test_site.py"
+      ],
+      "checks": {
+        "idea-brief": "Participant chose an own idea or the default, described one user outcome and check, and used the /create-website own-idea route in site/ideas/ without overwriting Monday's work",
+        "prototype": "A bounded prototype or improved default works with fictional app-local content; no service integration or account migration was required",
+        "manual-journey": "Expected versus observed user journey, input handling, and one useful improvement checked manually",
+        "saved-work": "Reviewed changes committed, pushed, and read back from the intended GitHub branch",
+        "handover": "Working features and unresolved data/access/approval questions recorded for the technical owner; no training membership or personal account deleted"
+      }
+    },
+    {
+      "id": "day-3",
+      "title": "VS Code and a User Requirements agent",
+      "guide": "docs/DAY-3.md",
+      "tests": [
+        "tests/test_devcontainer.py",
+        "tests/test_lab_contracts.py",
+        "tests/test_checks_helper.py"
+      ],
+      "checks": {
+        "tickets": "Two or three tickets written with the Requirement issue template from the Next wishes in site/README.md, and a Board project named after the learner that imports the repository and shows in its Projects tab; new tickets appeared on the board by themselves",
+        "cli-turn": "Actual Codespaces Copilot CLI sign-in with /login and the device code, and a question about the learner's own page compared with the page",
+        "github-tool": "A GitHub tool through MCP listed the open tickets in Copilot CLI after the learner allowed it by name, and the list matched the board",
+        "skill": "Learner-described .github/skills/user-stories/SKILL.md with the ticket's user story and acceptance criteria format, written by Copilot CLI and edited by the learner",
+        "requirements-agent": "Learner-described .github/agents/user-requirements.agent.md that reads a ticket with the GitHub tools, uses the user-stories skill, and updates the ticket with gh only after the learner agrees; written by Copilot CLI, edited by the learner, and listed by /agent after a CLI restart",
+        "criteria": "Every ticket holds a user story and Given/When/Then criteria from the agent, through gh issue edit or pasted by hand (recorded truthfully); each criterion validated as checkable; approved tickets moved to Todo",
+        "ticket-built": "The approved ticket moved to In Progress and implemented on the learner's page; every criterion checked by hand in the Website preview, with one debug round recorded truthfully",
+        "tests": "Learner tests in checks/test_*.py written with checks/website.py; pytest checks shown green, red after a deliberate break, and green again; the requirements list and build and run commands written in site/README.md",
+        "checkpoint": "Skill, agent, page, tests and site/README.md reviewed, committed with Closes #N, and pushed; the ticket closed itself and the board moved it to Done"
+      },
+      "optional_checks": {
+        "vscode-agent": "The same agent file chosen in VS Code Chat's agent picker and its answer compared with Copilot CLI",
+        "github-mcp": "Optional: the read-only GitHub MCP server in .vscode/mcp.json started in VS Code Chat, no write tools, recent commits matched GitHub",
+        "teach-copilot": "Optional Day 3 extra: /add-chat added to the page and one answer checked against the page, with the FOUNDRY_* workshop identity",
+        "browser-demo": "Optional presenter browser-tools demonstration rehearsed in the presenter's Codespace"
+      }
+    },
+    {
+      "id": "day-4",
+      "title": "Feature branches, a versioned pipeline, cloud agents and a Code Review agent",
+      "guide": "docs/DAY-4.md",
+      "tests": [
+        "tests/test_lab_contracts.py",
+        "tests/test_workflows.py",
+        "tests/test_site.py"
+      ],
+      "checks": {
+        "ruleset": "A Protect main ruleset on the default branch requiring pull requests with 0 approvals and an empty bypass list, with Copilot code review left off; a direct push to main refused",
+        "version": "The version line switched on in publish-website.yml on a feature branch, the footer showing Preview in the preview, and after the merge the live website showing Version 1.0.<run number> from version.json",
+        "branch-pr": "Feature branches created in the Codespace, published, opened as pull requests, their Files changed read by the learner, merged, deleted, and pulled back into main",
+        "review-agent": "Learner-described .github/instructions/review.instructions.md and .github/agents/code-review.agent.md with the findings-table report format, merged through a pull request, and the agent listed by /agent",
+        "report": "reviews/pr-N.md written by the review agent for Copilot's pull request; every finding marked Confirmed or Not a problem by the learner with a reason, and anything the agent missed noted",
+        "iteration": "An @copilot comment on a confirmed finding produced a new commit on the pull request; the criterion, pytest checks, and a second report were rerun; a neighbour checked one criterion",
+        "decision": "The pull request merged and deployed with the next version number (or closed with a reason), main pulled, and the report merged through a pull request"
+      },
+      "optional_checks": {
+        "publication": "A website without an address got one with /publish-website before the ruleset, verified at the actual URL for the exact commit",
+        "criteria-automation": "Presenter demo and optional extra: an automation on new Requirement tickets added a user story and criteria with the user-stories skill, then was disabled",
+        "joining-today": "A newcomer followed the catch-up at the top of the Day 4 guide: one Requirement ticket with a story and criteria drafted by Chat, ready for the delegation lab"
+      }
+    },
+    {
+      "id": "03",
+      "title": "Delegate an approved ticket to the cloud agent",
+      "guide": "docs/DAY-4.md",
+      "tests": [
+        "tests/test_lab_contracts.py",
+        "tests/test_site.py"
+      ],
+      "checks": {
+        "issue-session": "An approved ticket from the board, with its user story and acceptance criteria, assigned to the actual cloud agent and moved to In Progress, with its session inspected",
+        "review": "The draft pull request linked to the ticket; its diff compared with the ticket by the learner; scope limited to the requested files",
+        "merged-check": "Merged change deployed by the pipeline with the next version number and checked on the live website; the ticket closed and moved to Done"
+      },
+      "optional_checks": {
+        "website-change": "The simpler Website change for Copilot template used for a change that is not a ticket from the board"
+      }
+    },
+    {
+      "id": "day-5",
+      "title": "CI/CD with GitHub Actions",
+      "guide": "docs/DAY-5.md",
+      "tests": [
+        "tests/test_lab_contracts.py",
+        "tests/test_workflows.py",
+        "tests/test_smoke_test.py",
+        "tests/test_ui_check.py"
+      ],
+      "checks": {
+        "workflow": "Starter copied to .github/workflows/check-my-website.yml on a branch, pull_request and push triggers added, contents permission reduced to read, both jobs green on its own pull request, and merged",
+        "required-checks": "Check the website and UI check added as required status checks in the Protect main ruleset, blocking a merge while red",
+        "ci": "A pull request whose UI check went red from a deliberate 900-pixel banner, its log table and home-phone.png read (and the log explained by Copilot CLI), fixed to green, and merged",
+        "ui-check": "Desktop and phone screenshots opened from the run's Artifacts and the summary table read for the first page and any idea pages",
+        "cd": "Both slot starters merged with the version line kept, the learner a required reviewer of the production environment, Copilot's pull request run after Approve workflows to run, its Deploy feature slot run started with Approve and run, View deployment showing the strip with pull request, version, and build, the criteria checked there, an approved review and merge, and a production release published only after Review deployments > Approve and deploy, with the same content number as the feature slot",
+        "recovery": "scripts/smoke_test.py passed, failed on a deliberately bad sentence that the checks could not see, and passed again after a Revert pull request, with the content fingerprint back to the known-good value and a higher version",
+        "demos": "Team demo of the board and one ticket's criteria, a verified review finding, and CI/CD evidence with a screenshot rehearsed in the actual room setup",
+        "handoff": "HANDOFF.md naming the agents, skill, board, review rules, ruleset, pipeline steps, release and rollback, release owner, and routes to make it real (including Novo's own GitHub Enterprise and its validation process for GxP use) merged through a pull request"
+      },
+      "optional_checks": {
+        "smoke-in-pipeline": "Optional smoke-test step added to the publishing workflow",
+        "agentic-workflow": "Optional presenter demo of a GitHub Agentic Workflow (public preview) billed to the organization through GITHUB_TOKEN",
+        "joining-today": "A newcomer followed the catch-up at the top of the Day 5 guide: an address with /publish-website and the Protect main ruleset before the workflow lab"
+      }
+    }
+  ]
+}

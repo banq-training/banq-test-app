@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120">
+  <style>
+    .sun { transform-origin: 62px 48px; animation: spin 16s linear infinite; }
+    .cloud { animation: drift 7s ease-in-out infinite; }
+    .small { animation: drift 9s ease-in-out infinite reverse; }
+    .drop { animation: fall 1.4s linear infinite; }
+    .dr2 { animation-delay: 0.45s; } .dr3 { animation-delay: 0.9s; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes drift { 50% { transform: translateX(-10px); } }
+    @keyframes fall { 0% { transform: translateY(-4px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(16px); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .sun, .cloud, .small, .drop { animation: none; } }
+  </style>
+  <g class="sun">
+    <g stroke="#ffd166" stroke-width="5" stroke-linecap="round">
+      <line x1="62" y1="12" x2="62" y2="20"/><line x1="62" y1="76" x2="62" y2="84"/>
+      <line x1="26" y1="48" x2="34" y2="48"/><line x1="90" y1="48" x2="98" y2="48"/>
+      <line x1="37" y1="23" x2="42" y2="28"/><line x1="82" y1="68" x2="87" y2="73"/>
+      <line x1="37" y1="73" x2="42" y2="68"/><line x1="82" y1="28" x2="87" y2="23"/>
+    </g>
+    <circle cx="62" cy="48" r="22" fill="#ffd166"/>
+  </g>
+  <path class="small" d="M104 32h26a9 9 0 0 0 0-18 12 12 0 0 0-23 3 7.5 7.5 0 0 0-3 15z" fill="#ffffff" opacity="0.8"/>
+  <g class="cloud">
+    <path d="M60 94h64a18 18 0 0 0 0-36 26 26 0 0 0-50 6 15 15 0 0 0-14 30z" fill="#ffffff"/>
+    <line class="drop" x1="80" y1="98" x2="77" y2="106" stroke="#8ecae6" stroke-width="4" stroke-linecap="round"/>
+    <line class="drop dr2" x1="96" y1="98" x2="93" y2="106" stroke="#8ecae6" stroke-width="4" stroke-linecap="round"/>
+    <line class="drop dr3" x1="112" y1="98" x2="109" y2="106" stroke="#8ecae6" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

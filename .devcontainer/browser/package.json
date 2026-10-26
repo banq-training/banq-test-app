@@ -1,0 +1,9 @@
+{
+  "name": "workshop-browser-tools",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pinned browser tooling for the Codespaces-only workshop",
+  "dependencies": {
+    "@playwright/mcp": "0.0.81"
+  }
+}

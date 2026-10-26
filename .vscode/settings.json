@@ -1,0 +1,30 @@
+{
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "files.exclude": {
+    "**/__pycache__": true,
+    ".pytest_cache": true,
+    ".ruff_cache": true,
+    ".venv": true,
+    ".venv-research": true,
+    ".workshop-preview": true
+  },
+  "chat.mcp.autostart": "never",
+  "chat.mcp.discovery.enabled": {
+    "claude-desktop": false,
+    "copilot": false,
+    "cursor-global": false,
+    "cursor-workspace": false,
+    "windsurf": false
+  },
+  "chat.extensionTools.enabled": false,
+  "chat.plugins.enabled": false,
+  "chat.defaultToCopilotHarness": false,
+  "chat.editor.preferCopilotHarness": false,
+  "chat.harnessSwitchFeedbackSurvey.enabled": false,
+  "chat.copilotHarnessIntroduction.mode": "off",
+  "python.terminal.activateEnvironment": false,
+  "python-envs.terminal.autoActivationType": "off"
+}

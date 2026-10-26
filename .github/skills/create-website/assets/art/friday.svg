@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .c { transform-box: fill-box; transform-origin: center; animation: fall 2.4s linear infinite; }
+    .c2 { animation-delay: 0.6s; } .c3 { animation-delay: 1.2s; } .c4 { animation-delay: 1.8s; }
+    .star { transform-origin: 32px 40px; animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes fall { 0% { transform: translateY(-8px) rotate(0deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(34px) rotate(220deg); opacity: 0; } }
+    @keyframes pulse { 50% { transform: scale(1.08) rotate(-5deg); } }
+    @media (prefers-reduced-motion: reduce) { .c, .star { animation: none; } }
+  </style>
+  <rect class="c" x="10" y="8" width="6" height="3" rx="1" fill="#e07a5f"/>
+  <rect class="c c2" x="47" y="6" width="6" height="3" rx="1" fill="#81b29a"/>
+  <circle class="c c3" cx="24" cy="6" r="2" fill="#3d5a80"/>
+  <circle class="c c4" cx="54" cy="14" r="2" fill="#e9c46a"/>
+  <path class="star" d="M32 23l5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z" fill="#f6bd60" stroke="#e09f3e" stroke-width="2" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Princeton Map</title>
+    <link rel="stylesheet" href="css/workshop.css">
+    <style>
+        .map-area { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 1rem; align-items: start; }
+        .map-area .chart { height: 470px; border-radius: var(--radius); overflow: hidden; }
+        .map-area .chart:not(.chart-stage) { background: #f6f3ec; border: 1px solid var(--line); }
+        .map-area .chart.is-placing { cursor: crosshair; outline: 3px dashed var(--accent); outline-offset: 3px; }
+        .filters { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .filter { display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 99px; padding: 0.3rem 0.8rem; font-weight: 650; cursor: pointer; }
+        .filter[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+        .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--dot, var(--accent)); flex: none; }
+        .place-card { display: grid; gap: 0.6rem; padding: 1.1rem; border-radius: var(--radius); background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
+        .place-card h3 { font-size: 1.3rem; line-height: 1.2; }
+        .place-card .chip { justify-self: start; background: color-mix(in srgb, var(--dot) 16%, white); color: color-mix(in srgb, var(--dot) 75%, black); }
+        .place-card a { color: var(--accent-strong); font-weight: 650; }
+        .places { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.7rem; }
+        .place { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.75rem; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
+        .place.is-chosen { border-color: var(--dot); box-shadow: 0 0 0 2px var(--dot), var(--shadow-lift); }
+        .place > button:first-of-type { flex: 1; min-width: 0; display: grid; gap: 0.1rem; text-align: left; border: 0; background: none; padding: 0; color: var(--ink); cursor: pointer; }
+        .place strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .place small { color: var(--muted); }
+        .source { font-size: 0.85rem; margin-top: 0.9rem; }
+        @media (max-width: 760px) {
+            .map-area { grid-template-columns: 1fr; }
+            .map-area .chart { height: 380px; }
+        }
+    </style>
+</head>
+<body data-theme="green">
+    <header class="app-header">
+        <div class="container hero">
+            <div>
+                <p class="logo"><span class="logo-mark" aria-hidden="true">M</span>My Princeton Map</p>
+                <h1>Princeton, one pin at a time</h1>
+                <p>Choose a pin to read about it, filter by type, press + to add your own place, or see the town in 3D.</p>
+            </div>
+            <img class="hero-art" src="art/hero-map.svg" alt="">
+        </div>
+    </header>
+
+    <main class="container main">
+        <section class="panel animate-in">
+            <div class="toolbar">
+                <div class="filters" id="filters" role="group" aria-label="Show places"></div>
+                <div class="tabs" role="group" aria-label="Map view">
+                    <button type="button" data-view="map" aria-pressed="true">Map</button>
+                    <button type="button" data-view="3d" aria-pressed="false">3D</button>
+                </div>
+            </div>
+            <div class="map-area">
+                <div class="chart" id="map"></div>
+                <aside class="place-card" id="card" aria-live="polite"></aside>
+            </div>
+            <p class="source muted" id="hint">Scroll to zoom and drag to move the map.</p>
+        </section>
+
+        <section class="panel animate-in" style="--i: 1">
+            <div class="toolbar">
+                <h2>All places</h2>
+                <strong id="count"></strong>
+            </div>
+            <div class="places" id="places"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Your places are remembered in this browser. Map: U.S. Census Bureau TIGER/Line, simplified, not for navigation.</footer>
+
+    <script src="js/workshop.js"></script>
+    <script src="js/vendor/echarts.min.js"></script>
+    <script src="js/vendor/echarts-gl.min.js"></script>
+    <script src="js/workshop-charts.js"></script>
+    <script>
+        const { el, store, loadJSON, addButton, toast, flash, newId, chart, can3D } = window.Workshop
+        const SAMPLE = {
+            items: [
+                { id: 'nassau-hall', name: 'Nassau Hall', category: 'Campus', lat: 40.34874, lon: -74.65935, description: 'Princeton\'s oldest building, which served as the nation\'s capital in 1783.', source: 'http://tigernet.princeton.edu/~ptoniana/nassauhall.asp' },
+                { id: 'princeton-university-chapel', name: 'Princeton University Chapel', category: 'Campus', lat: 40.34889, lon: -74.65689, description: 'Completed in 1928; the University opens and closes each academic year with a service here.', source: 'https://chapel.princeton.edu/' },
+                { id: 'princeton-university-art-museum', name: 'Princeton University Art Museum', category: 'Arts', lat: 40.34719, lon: -74.65803, description: 'The museum\'s bold new building opened to the public on October 31, 2025.', source: 'https://artmuseum.princeton.edu/about/new-museum' },
+                { id: 'mccarter-theatre-center', name: 'McCarter Theatre Center', category: 'Arts', lat: 40.34431, lon: -74.6607, description: 'Thornton Wilder\'s play Our Town had its premiere on McCarter\'s stage.', source: 'https://www.mccarter.org/about-us' },
+                { id: 'palmer-square', name: 'Palmer Square', category: 'Town', lat: 40.35011, lon: -74.66153, description: 'Edgar Palmer announced this new town center for Princeton in February 1929.', source: 'https://web.archive.org/web/20111124075903/http://princetonhistory.org/collections/historic-sites.cfm' },
+                { id: 'princeton-public-library', name: 'Princeton Public Library', category: 'Town', lat: 40.35173, lon: -74.66033, description: 'The Sands Library Building opened in 2004 and was hailed as a modern library.', source: 'https://princetonlibrary.org/about-us/library-spaces/' },
+                { id: 'morven-museum-garden', name: 'Morven Museum & Garden', category: 'History', lat: 40.34749, lon: -74.66695, description: 'Built in the 1750s by Richard Stockton, a signer of the Declaration of Independence.', source: 'https://www.morven.org/about' },
+                { id: 'princeton-battlefield-state-park', name: 'Princeton Battlefield', category: 'History', lat: 40.33083, lon: -74.67556, description: 'Site of the January 3, 1777 battle, called the fiercest fight of its size in the Revolution.', source: 'https://web.archive.org/web/20181215230330/https://www.state.nj.us/dep/parksandforests/parks/princeton.html' },
+                { id: 'princeton-battle-monument', name: 'Princeton Battle Monument', category: 'History', lat: 40.34781, lon: -74.66586, description: 'Commissioned in 1908 and dedicated in 1922, with President Harding in attendance.', source: 'https://web.archive.org/web/20111124075903/http://princetonhistory.org/collections/historic-sites.cfm' },
+                { id: 'drumthwacket', name: 'Drumthwacket', category: 'History', lat: 40.33917, lon: -74.67472, description: 'The official residence of New Jersey\'s governor, on land where the 1777 battle was fought.', source: 'https://drumthwacket.org/' },
+                { id: 'princeton-cemetery', name: 'Princeton Cemetery', category: 'History', lat: 40.355, lon: -74.66, description: 'Established in 1757 and still run by Nassau Presbyterian Church, near the center of town.', source: 'https://nassauchurch.org/about/princetoncemetery/' },
+                { id: 'updike-farmstead', name: 'Updike Farmstead', category: 'History', lat: 40.32462, lon: -74.67996, description: 'A six-acre farmstead bought by the Historical Society of Princeton in 2004.', source: 'https://princetonhistory.org/visit/updike-farmstead/' },
+                { id: 'lake-carnegie', name: 'Lake Carnegie', category: 'Nature', lat: 40.33938, lon: -74.65075, description: 'A 3.5-mile lake made in 1906 when a dam at Kingston held back the Millstone River.', source: 'http://tigernet.princeton.edu/~ptoniana/carnegie.asp' },
+                { id: 'institute-woods', name: 'Institute Woods', category: 'Nature', lat: 40.32425, lon: -74.68879, description: '589 acres of woods, wetlands and farmland, gathered by the Institute for Advanced Study from 1936.', source: 'https://www.ias.edu/institute-woods' },
+                { id: 'marquand-park', name: 'Marquand Park', category: 'Nature', lat: 40.3415, lon: -74.67114, description: 'Over 140 kinds of trees, including a Dawn Redwood once known only from fossils.', source: 'https://www.marquandpark.org/about' },
+                { id: 'herrontown-woods', name: 'Herrontown Woods', category: 'Nature', lat: 40.37978, lon: -74.64377, description: 'Woods whose Veblen House was given to Mercer County in 1974 to become a nature museum.', source: 'https://www.herrontownwoods.org/' },
+                { id: 'mountain-lakes-preserve', name: 'Mountain Lakes Preserve', category: 'Nature', lat: 40.36322, lon: -74.67605, description: 'Friends of Princeton Open Space is planting over 6,500 native trees, shrubs and wildflowers here.', source: 'https://www.fopos.org/' },
+                { id: 'dr-canal-towpath', name: 'D&R Canal Towpath', category: 'Nature', lat: 40.33136, lon: -74.65365, description: 'The towpath of the Delaware and Raritan Canal, chartered by New Jersey in 1830.', source: 'https://dandrcanal.org/history' },
+            ],
+        }
+        const COLORS = { Campus: '#3a6fd8', History: '#c2462e', Arts: '#8e5bd6', Nature: '#2f8f5b', Town: '#c98a00', Mine: '#e0457b' }
+        const CENTRE = { name: 'Palmer Square', lat: 40.35011, lon: -74.66153 }
+        const saved = store('princeton-map')
+        const encode = text => echarts.format.encodeHTML(String(text))
+        let state = SAMPLE
+        let map = null
+        let chosen = null
+        let filter = 'All'
+        let view = 'map'
+        let placing = null
+        let wired = null
+        let camera = null
+        // An empty map means there is nothing of the learner's left to keep, so the
+        // examples load themselves again rather than leaving a blank page.
+        const valid = data => data && Array.isArray(data.items) && data.items.length > 0
+
+        function miles(place) {
+            const rad = degrees => degrees * Math.PI / 180
+            const a = Math.sin(rad(place.lat - CENTRE.lat) / 2) ** 2
+                + Math.cos(rad(CENTRE.lat)) * Math.cos(rad(place.lat)) * Math.sin(rad(place.lon - CENTRE.lon) / 2) ** 2
+            return 3958.8 * 2 * Math.asin(Math.sqrt(a))
+        }
+
+        const shown = () => state.items.filter(place => filter === 'All' || place.category === filter)
+        const colorOf = place => COLORS[place.category] || COLORS.Mine
+
+        function update(message, changedId) {
+            saved.save(state)
+            render()
+            if (message) toast(message)
+            if (changedId) flash(document.querySelector(`[data-card-id="${changedId}"]`))
+        }
+
+        function choose(id, zoomIn = false) {
+            chosen = state.items.find(place => place.id === id) || null
+            if (chosen && zoomIn) camera = { center: [chosen.lon, chosen.lat], zoom: Math.max(camera ? camera.zoom : 1, 3) }
+            render()
+        }
+
+        function renderFilters() {
+            const categories = ['All', ...Object.keys(COLORS).filter(name => state.items.some(place => place.category === name))]
+            if (!categories.includes(filter)) filter = 'All'
+            document.getElementById('filters').replaceChildren(...categories.map(name => el('button', {
+                type: 'button', className: 'filter', 'aria-pressed': String(filter === name),
+                onClick: () => { filter = name; if (chosen && name !== 'All' && chosen.category !== name) chosen = null; render() },
+            }, name !== 'All' && el('span', { className: 'dot', style: `--dot: ${COLORS[name]}` }), name)))
+        }
+
+        function renderCard() {
+            const card = document.getElementById('card')
+            if (!chosen) {
+                card.replaceChildren(el('h3', {}, 'Pick a place'), el('p', { className: 'muted' },
+                    `${shown().length} pins on the map. Choose one, or a place in the list below, to read about it.`))
+                return
+            }
+            const away = miles(chosen)
+            card.replaceChildren(...[
+                el('span', { className: 'chip', style: `--dot: ${colorOf(chosen)}` }, chosen.category),
+                el('h3', {}, chosen.name),
+                el('p', {}, chosen.description || 'A place you added.'),
+                el('p', { className: 'muted' }, away < 0.05 ? 'Right at Palmer Square.' : `${away.toFixed(1)} miles from Palmer Square, as the crow flies.`),
+                chosen.source && el('a', { href: chosen.source, target: '_blank', rel: 'noopener' }, 'Where this comes from'),
+            ].filter(Boolean))
+            card.style.setProperty('--dot', colorOf(chosen))
+            flash(card)
+        }
+
+        function renderList() {
+            const places = shown()
+            document.getElementById('count').textContent = filter === 'All'
+                ? `${state.items.length} places` : `${places.length} of ${state.items.length} places`
+            const cards = places.map((place, index) => el('article', {
+                className: `place animate-in${chosen && chosen.id === place.id ? ' is-chosen' : ''}`,
+                'data-card-id': place.id, style: `--dot: ${colorOf(place)}; --i: ${Math.min(index, 12)}`,
+            },
+                el('span', { className: 'dot' }),
+                el('button', { type: 'button', onClick: () => choose(place.id, true), 'aria-label': `Show ${place.name} on the map` },
+                    el('strong', {}, place.name), el('small', {}, place.category)),
+                el('button', {
+                    type: 'button', className: 'remove', 'aria-label': `Remove ${place.name}`,
+                    onClick: () => {
+                        state.items = state.items.filter(entry => entry.id !== place.id)
+                        if (chosen && chosen.id === place.id) chosen = null
+                        update(`${place.name} removed`)
+                    },
+                }, '\u00d7')))
+            const adder = addButton('Add a place', name => {
+                placing = name
+                view = 'map'
+                toast(`Now click the map where ${name} is`)
+                render()
+            })
+            document.getElementById('places').replaceChildren(...cards, el('div', { className: 'place-add' }, adder))
+        }
+
+        function lines(kind) {
+            return map.roads.filter(road => road.kind === kind).map(road => ({ coords: road.path }))
+        }
+
+        // In 3D the roads are drawn as rows of small lights, one every `step` degrees along each road.
+        function lights(kind, step, height) {
+            const points = []
+            for (const road of map.roads.filter(entry => entry.kind === kind)) {
+                road.path.slice(1).forEach(([lon, lat], index) => {
+                    const [fromLon, fromLat] = road.path[index]
+                    const parts = Math.max(1, Math.round(Math.hypot(lon - fromLon, lat - fromLat) / step))
+                    for (let part = 0; part < parts; part++) {
+                        points.push([fromLon + (lon - fromLon) * part / parts, fromLat + (lat - fromLat) * part / parts, height])
+                    }
+                })
+            }
+            return points
+        }
+
+        function areaStyles(night) {
+            return map.areas.features.map(feature => {
+                const { kind, label } = feature.properties
+                const day = kind === 'water' ? ['#bfe0f2', '#a6d1ea'] : kind === 'campus' ? ['#e7eedb', '#d9e3c9']
+                    : label === 'Princeton' ? ['#fcfaf4', '#d9cfba'] : ['#f0ece2', '#ddd4c2']
+                const dark = kind === 'water' ? '#1f6f9a' : kind === 'campus' ? '#20443c' : label === 'Princeton' ? '#1c3a46' : '#132a33'
+                return night
+                    ? { name: feature.properties.name, height: kind === 'water' ? 0.1 : kind === 'campus' ? 0.7 : 0.5, itemStyle: { color: dark } }
+                    : { name: feature.properties.name, itemStyle: { areaColor: day[0], borderColor: day[1] } }
+            })
+        }
+
+        function drawMap() {
+            const box = document.getElementById('map')
+            box.classList.toggle('chart-stage', view === '3d')
+            box.classList.toggle('is-placing', Boolean(placing))
+            document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === view)))
+            document.getElementById('hint').textContent = placing ? `Click the map where ${placing} is. Press Escape to cancel.`
+                : view === '3d' ? 'Drag to turn the town. Point at a pillar to see its name.' : 'Scroll to zoom and drag to move the map.'
+            if (!map) {
+                box.textContent = 'The map file data/map.json could not be loaded.'
+                return
+            }
+            const places = shown()
+            const tooltip = { formatter: item => item.data && item.data.place ? `<b>${encode(item.data.place.name)}</b><br>${encode(item.data.place.category)}` : '' }
+            const threeD = view === '3d' && can3D()
+            const instance = threeD ? chart(box, {
+                tooltip,
+                geo3D: {
+                    map: 'princeton', regionHeight: 0.5, shading: 'lambert', silent: true,
+                    itemStyle: { color: '#1c3a46', borderColor: '#2f6273', borderWidth: 0.5 }, regions: areaStyles(true),
+                    label: { show: false }, emphasis: { label: { show: false } },
+                    light: { main: { intensity: 1.3, alpha: 40, beta: 30, shadow: true }, ambient: { intensity: 0.5 } },
+                    viewControl: { alpha: 42, beta: 12, distance: 115, autoRotate: true, autoRotateSpeed: 3, autoRotateAfterStill: 5, zoomSensitivity: 0, panSensitivity: 0 },
+                    postEffect: { enable: true, bloom: { enable: true, bloomIntensity: 0.18 } },
+                },
+                series: [
+                    { type: 'scatter3D', coordinateSystem: 'geo3D', silent: true, data: lights('street', 0.0004, 0.6), symbolSize: 2.2, itemStyle: { color: '#7fd6ea', opacity: 0.55 } },
+                    { type: 'scatter3D', coordinateSystem: 'geo3D', silent: true, data: lights('main', 0.00025, 0.7), symbolSize: 3.6, itemStyle: { color: '#ffd98a', opacity: 0.95 } },
+                    {
+                        type: 'bar3D', coordinateSystem: 'geo3D', shading: 'lambert', barSize: 0.9, minHeight: 0.2, bevelSize: 0.4,
+                        data: places.map(place => ({ name: place.name, place, value: [place.lon, place.lat, chosen && chosen.id === place.id ? 18 : 9], itemStyle: { color: colorOf(place) } })),
+                        label: { show: false, formatter: item => item.name, textStyle: { color: '#ffffff', fontSize: 13, backgroundColor: 'rgba(10, 27, 35, 0.8)', padding: [3, 6], borderRadius: 4 } },
+                        emphasis: { label: { show: true } },
+                    },
+                ],
+            }, { fresh: true }) : chart(box, {
+                tooltip,
+                geo: {
+                    map: 'princeton', boundingCoords: map.bounds, roam: true, scaleLimit: { min: 1, max: 12 }, silent: true,
+                    itemStyle: { areaColor: '#f0ece2', borderColor: '#ddd4c2' }, regions: areaStyles(false),
+                    label: { show: false }, emphasis: { disabled: true }, select: { disabled: true },
+                    ...(camera || {}),
+                },
+                series: [
+                    { type: 'lines', coordinateSystem: 'geo', polyline: true, silent: true, z: 1, data: lines('street'), lineStyle: { color: '#e2dacb', width: 3.4, opacity: 1 } },
+                    { type: 'lines', coordinateSystem: 'geo', polyline: true, silent: true, z: 2, data: lines('street'), lineStyle: { color: '#ffffff', width: 2, opacity: 1 } },
+                    { type: 'lines', coordinateSystem: 'geo', polyline: true, silent: true, z: 3, data: lines('main'), lineStyle: { color: '#e5b04f', width: 5.5, opacity: 1 } },
+                    { type: 'lines', coordinateSystem: 'geo', polyline: true, silent: true, z: 4, data: lines('main'), lineStyle: { color: '#ffd98a', width: 3.5, opacity: 1 } },
+                    { type: 'lines', coordinateSystem: 'geo', polyline: true, silent: true, z: 4, data: map.rail.map(path => ({ coords: path })), lineStyle: { color: '#7d8a93', width: 1.6, opacity: 0.9, type: [5, 4] } },
+                    {
+                        id: 'chosen', type: 'effectScatter', coordinateSystem: 'geo', z: 5, silent: true, symbolSize: 14,
+                        rippleEffect: { scale: 4.5, brushType: 'stroke' },
+                        data: chosen && places.includes(chosen) ? [{ value: [chosen.lon, chosen.lat], itemStyle: { color: colorOf(chosen) } }] : [],
+                    },
+                    {
+                        id: 'places', type: 'scatter', coordinateSystem: 'geo', z: 6, symbol: 'pin', symbolSize: 30,
+                        data: places.map(place => ({
+                            name: place.name, place, value: [place.lon, place.lat],
+                            itemStyle: { color: colorOf(place), borderColor: '#ffffff', borderWidth: 1.5, shadowBlur: 6, shadowColor: 'rgba(0, 0, 0, 0.25)' },
+                            label: { show: Boolean(chosen && chosen.id === place.id) },
+                        })),
+                        label: { position: 'top', formatter: '{b}', color: '#1d262b', fontWeight: 700, backgroundColor: 'rgba(255, 255, 255, 0.92)', padding: [3, 6], borderRadius: 6 },
+                        emphasis: { scale: 1.2, label: { show: true } },
+                    },
+                ],
+            }, { fresh: wired && wired.view !== view })
+            if (instance && (!wired || wired.instance !== instance)) {
+                wired = { instance, view }
+                instance.on('click', item => { if (!placing && item.data && item.data.place) choose(item.data.place.id) })
+                instance.on('georoam', () => {
+                    const geo = instance.getOption().geo
+                    if (geo && geo[0]) camera = { center: geo[0].center, zoom: geo[0].zoom }
+                })
+                instance.getZr().on('click', event => {
+                    if (!placing || view !== 'map') return
+                    const [lon, lat] = instance.convertFromPixel({ geoIndex: 0 }, [event.offsetX, event.offsetY])
+                    const place = { id: newId(), name: placing, category: 'Mine', lat: Number(lat.toFixed(5)), lon: Number(lon.toFixed(5)), description: 'A place you added.' }
+                    placing = null
+                    state.items.push(place)
+                    chosen = place
+                    filter = 'All'
+                    update(`${place.name} added`, place.id)
+                })
+            }
+            if (wired) wired.view = view
+        }
+
+        function render() {
+            renderFilters()
+            renderList()
+            renderCard()
+            drawMap()
+        }
+
+        document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => {
+            view = button.dataset.view
+            placing = null
+            drawMap()
+        }))
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && placing) { placing = null; toast('No place added'); drawMap() }
+        })
+
+        async function start() {
+            const remembered = saved.load(null)
+            const loaded = valid(remembered) ? remembered : await loadJSON('data/places.json', SAMPLE)
+            state = valid(loaded) ? loaded : SAMPLE
+            map = await loadJSON('data/map.json', null)
+            if (map && window.echarts) echarts.registerMap('princeton', map.areas)
+            render()
+        }
+        start()
+    </script>
+</body>
+</html>

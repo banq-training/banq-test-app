@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    # Pull requests that change only learner work, such as the cloud agent's on Day 4, start no
+    # run at all, so attendees never meet an "Approve workflows to run" prompt for a skipped check.
+    # Pushes to the template's main still run everything, including the learner-work guard.
+    paths-ignore:
+      - "site/**"
+      - "config.json"
+      - "checks/test_*.py"
+      # pytest also collects *_test.py: the cloud agent wrote checks/issue1_test.py on 22 October.
+      - "checks/*_test.py"
+      - "reviews/**"
+      - "HANDOFF.md"
+      - ".github/agents/user-requirements.agent.md"
+      - ".github/agents/code-review.agent.md"
+      - ".github/skills/user-stories/**"
+      - ".github/instructions/**"
+permissions:
+  contents: read
+
+jobs:
+  # Attendee copies skip CI, like the Codespace image: a red cross they never asked for only
+  # worries a beginner, and publishing runs its own website check.
+  test:
+    if: ${{ github.event.repository.is_template }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.7"
+      - name: Keep the template free of learner work
+        run: |
+          learner_work="$(git ls-files site .github/instructions .github/skills/make-image .github/skills/edit-image \
+            .github/skills/user-stories .github/agents/user-requirements.agent.md .github/agents/code-review.agent.md \
+            '.github/workflows/check-my-website.yml' '.github/workflows/deploy-feature-slot.yml' 'checks/test_*.py' \
+            'checks/*_test.py' reviews HANDOFF.md \
+            | grep -vx 'site/README.md' || true)"
+          if [ -n "$learner_work" ]; then
+            printf '::error::The template ships starters, not finished work. Remove:\n%s\n' "$learner_work"
+            exit 1
+          fi
+          if ! jq -e '.websiteName == ""' config.json > /dev/null; then
+            echo "::error file=config.json::The template ships with an empty websiteName; attendees choose theirs with /publish-website."
+            exit 1
+          fi
+      - run: uv sync --locked --extra dev --extra web
+      - run: uv run ruff check .
+      - run: uv run pytest
+      - name: Build Python wheel
+        run: uv build --wheel
+      - name: Build application image
+        run: docker build --tag workshop-check .
+      - name: Prepare a CI-only website when learner output is absent
+        run: |
+          if [ ! -f site/index.html ]; then
+            printf '%s\n' '<!doctype html><html lang="en"><body><h1>Synthetic CI website</h1></body></html>' > site/index.html
+          fi
+          uv run --no-sync python -m app.site --check
+      - name: Build website image
+        run: docker build --file Dockerfile.website --tag workshop-website-check .
+      - name: Import website runtime and inspect actual image assets
+        run: docker run --rm --entrypoint python workshop-website-check -c 'from app.site import site_manifest; assert site_manifest()["index_sha256"]'
+
+  # Runs the Day 5 UI check exactly as the learner's starter does, on a real starter page, so a
+  # broken browser install or script shows up here before the workshop.
+  ui-check:
+    if: ${{ github.event.repository.is_template }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.7"
+      - run: uv sync --locked --extra dev --extra web
+      - name: Build the Project Planner starter as a CI-only website
+        run: |
+          assets=.github/skills/create-website/assets
+          cp -r "$assets/blueprints/project/." site/
+          cp -r "$assets/css" "$assets/js" "$assets/art" site/
+          mkdir -p site/fonts
+          cp "$assets/fonts/source-sans-3-latin.woff2" site/fonts/
+      # Same step as the starter: the runner image already has the browser's system libraries.
+      - name: Install a browser
+        run: uv run --with playwright==1.64.0 playwright install chromium
+      # Same step as the starter: Ubuntu 24.04 blocks what Chromium's sandbox needs, and the
+      # sandbox stays on.
+      - name: Let the browser keep its sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Run the Day 5 UI check
+        run: |
+          uv run uvicorn app.site:app --host 127.0.0.1 --port 8000 > website.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            curl --silent --output /dev/null http://127.0.0.1:8000/ && break
+            sleep 1
+          done
+          uv run --with playwright==1.64.0 python scripts/ui_check.py http://127.0.0.1:8000 --out ui-check
+      - name: Keep the screenshots
+        if: ${{ always() && hashFiles('ui-check/*.png') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-check-screenshots
+          path: ui-check/
+          retention-days: 7
+
+  research-tools:
+    if: ${{ github.event.repository.is_template }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.7"
+      - name: Prepare Linux research tools and launch headless browser
+        run: |
+          bash .devcontainer/setup.sh browser
+          bash .devcontainer/setup.sh research
+      - name: Invoke both MCP servers with synthetic inputs
+        run: .venv-research/bin/python scripts/check_workshop_mcp.py

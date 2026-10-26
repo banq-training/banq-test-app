@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vendor-assurance-training"
+version = "0.1.0"
+description = "Synthetic vendor assurance training workflow"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0,<9", "ruff==0.15.15", "PyYAML>=6.0,<7", "httpx>=0.28,<1"]
+web = ["fastapi>=0.115,<1", "uvicorn>=0.32,<1"]
+
+[project.scripts]
+vendor-assurance = "vendor_assurance.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vendor_assurance"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

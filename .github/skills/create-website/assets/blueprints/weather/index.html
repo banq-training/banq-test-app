@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Weather</title>
+    <link rel="stylesheet" href="css/workshop.css">
+    <style>
+        .details { display: grid; gap: 0.2rem; }
+        .source { font-size: 0.85rem; margin-top: 1rem; }
+        .source a { color: var(--accent-strong); }
+        .climate { margin-top: 1.2rem; }
+        .climate .chart { height: 380px; }
+    </style>
+</head>
+<body data-theme="green">
+    <header class="app-header">
+        <div class="container hero">
+            <div>
+                <p class="logo"><span class="logo-mark" aria-hidden="true">M</span>My Weather</p>
+                <h1>What's the weather like?</h1>
+                <p>Pick a city, or press + to add your own. Live data from Open-Meteo.</p>
+            </div>
+            <img class="hero-art" src="art/hero-weather.svg" alt="">
+        </div>
+    </header>
+
+    <main class="container main">
+        <section class="panel animate-in">
+            <div class="toolbar">
+                <div class="cities" id="cities" role="group" aria-label="Cities"></div>
+            </div>
+            <p class="notice" id="notice" role="status" hidden></p>
+            <div class="weather-now" id="now" aria-live="polite"></div>
+            <div class="forecast" id="forecast"></div>
+            <p class="source muted" id="source"></p>
+        </section>
+
+        <section class="panel animate-in climate" style="--i: 1" aria-labelledby="climate-title">
+            <div class="toolbar">
+                <div>
+                    <h2 id="climate-title">Your cities through the year</h2>
+                    <p class="muted" id="climate-caption">Average temperature each month.</p>
+                </div>
+                <div class="tabs" role="group" aria-label="Chart view">
+                    <button type="button" data-view="3d" aria-pressed="true">3D</button>
+                    <button type="button" data-view="flat" aria-pressed="false">Flat</button>
+                </div>
+            </div>
+            <div class="chart chart-stage" id="climate"></div>
+            <p class="source muted" id="climate-source"></p>
+        </section>
+    </main>
+
+    <footer class="page-footer">Your cities are remembered in this browser. Weather by Open-Meteo.com.</footer>
+
+    <script src="js/workshop.js"></script>
+    <script src="js/vendor/echarts.min.js"></script>
+    <script src="js/vendor/echarts-gl.min.js"></script>
+    <script src="js/workshop-charts.js"></script>
+    <script>
+        const { el, store, getJSON, loadJSON, addButton, toast, flash, chart, chartColors, can3D } = window.Workshop
+        const SAMPLE = {
+            cities: [
+                { name: 'Princeton', country: 'United States', latitude: 40.35, longitude: -74.66 },
+                { name: 'Copenhagen', country: 'Denmark', latitude: 55.68, longitude: 12.57 },
+                { name: 'Sydney', country: 'Australia', latitude: -33.87, longitude: 151.21 },
+            ],
+            offline: {
+                current: { temperature: 57, code: 2, wind: 7 },
+                daily: [
+                    { date: '2026-01-01', code: 2, max: 59, min: 46 },
+                    { date: '2026-01-02', code: 61, max: 55, min: 45 },
+                    { date: '2026-01-03', code: 0, max: 63, min: 48 },
+                    { date: '2026-01-04', code: 3, max: 57, min: 46 },
+                ],
+            },
+            climate: {
+                year: 2025,
+                note: 'Average of each day\'s mean temperature (\u00b0F) per month, from Open-Meteo historical weather (ERA5).',
+                months: {
+                    Princeton: [28, 33, 46, 54, 62, 73, 79, 72, 68, 57, 45, 31],
+                    Copenhagen: [37, 35, 42, 49, 54, 61, 65, 64, 60, 52, 44, 42],
+                    Sydney: [72, 73, 72, 66, 61, 53, 54, 56, 62, 68, 69, 71],
+                },
+            },
+        }
+        // Each weather type is drawn from simple shapes, so no emoji font or image file is needed.
+        const SUN = [['circle', { cx: 32, cy: 32, r: 12, fill: '#f6b21a' }],
+            ...[0, 45, 90, 135, 180, 225, 270, 315].map(angle => ['line', {
+                x1: 32, y1: 8, x2: 32, y2: 14, stroke: '#f6b21a', 'stroke-width': 4, 'stroke-linecap': 'round', transform: `rotate(${angle} 32 32)`,
+            }])]
+        const CLOUD = (x = 0, y = 0, fill = '#cfd8e3') => ['path', { d: 'M20 46h26a10 10 0 0 0 0-20 14 14 0 0 0-27 3A8.5 8.5 0 0 0 20 46z', fill, transform: `translate(${x} ${y})` }]
+        const DROPS = color => [14, 26, 38].map(x => ['line', { x1: x + 8, y1: 50, x2: x + 5, y2: 58, stroke: color, 'stroke-width': 3, 'stroke-linecap': 'round' }])
+        const LOOKS = [
+            [[0], 'Clear sky', SUN],
+            [[1, 2], 'Partly cloudy', [...SUN.map(([tag, props]) => [tag, { ...props, transform: `translate(-8 -8) ${props.transform || ''}` }]), CLOUD(6, 6)]],
+            [[3], 'Cloudy', [CLOUD(-4, -4, '#dde4ec'), CLOUD(4, 4)]],
+            [[45, 48], 'Fog', [CLOUD(0, -6), ...[44, 52].map(y => ['line', { x1: 12, y1: y, x2: 52, y2: y, stroke: '#a9b6c4', 'stroke-width': 3, 'stroke-linecap': 'round' }])]],
+            [[51, 53, 55, 56, 57], 'Drizzle', [CLOUD(0, -6), ...DROPS('#7fb2e5')]],
+            [[61, 63, 65, 66, 67, 80, 81, 82], 'Rain', [CLOUD(0, -6, '#b7c3d1'), ...DROPS('#3a7fd8')]],
+            [[71, 73, 75, 77, 85, 86], 'Snow', [CLOUD(0, -6), ...[18, 32, 46].map(x => ['circle', { cx: x, cy: 55, r: 3, fill: '#9cc3ea' }])]],
+            [[95, 96, 99], 'Thunderstorm', [CLOUD(0, -6, '#98a6b6'), ['path', { d: 'M34 42l-8 12h7l-4 9 11-14h-7l4-7z', fill: '#f6b21a' }]]],
+        ]
+        function look(code) {
+            const [, label, shapes] = LOOKS.find(([codes]) => codes.includes(code)) || LOOKS[2]
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+            svg.setAttribute('viewBox', '0 0 64 64')
+            for (const [tag, props] of shapes) {
+                const shape = document.createElementNS('http://www.w3.org/2000/svg', tag)
+                for (const [name, value] of Object.entries(props)) shape.setAttribute(name, value)
+                svg.append(shape)
+            }
+            return [el('span', { className: 'weather-icon', role: 'img', 'aria-label': label }, svg), label]
+        }
+        const saved = store('weather')
+        let state = { cities: SAMPLE.cities, selected: 0 }
+        let sample = SAMPLE
+        // No cities means there is nothing of the learner's left to keep, so the
+        // examples load themselves again rather than leaving a blank page.
+        const valid = data => data && Array.isArray(data.cities) && data.cities.length > 0
+
+        function forecastUrl(city) {
+            const query = new URLSearchParams({
+                latitude: city.latitude, longitude: city.longitude, timezone: 'auto', forecast_days: 4,
+                temperature_unit: 'fahrenheit', wind_speed_unit: 'mph',
+                current: 'temperature_2m,weather_code,wind_speed_10m',
+                daily: 'weather_code,temperature_2m_max,temperature_2m_min',
+            })
+            return `https://api.open-meteo.com/v1/forecast?${query}`
+        }
+
+        async function fetchWeather(city) {
+            const url = forecastUrl(city)
+            try {
+                const data = await getJSON(url)
+                return {
+                    live: true, url,
+                    current: { temperature: data.current.temperature_2m, code: data.current.weather_code, wind: data.current.wind_speed_10m },
+                    daily: data.daily.time.map((date, index) => ({
+                        date, code: data.daily.weather_code[index],
+                        max: data.daily.temperature_2m_max[index], min: data.daily.temperature_2m_min[index],
+                    })),
+                }
+            } catch {
+                return { live: false, url, ...sample.offline }
+            }
+        }
+
+        function renderCities() {
+            document.getElementById('cities').replaceChildren(
+                ...state.cities.map((city, index) => el('span', { className: `city${index === state.selected ? ' is-selected' : ''}` },
+                    el('button', {
+                        type: 'button', 'aria-pressed': String(index === state.selected),
+                        onClick: () => { state.selected = index; saved.save(state); show() },
+                    }, city.name),
+                    state.cities.length > 1 && el('button', {
+                        type: 'button', className: 'remove', 'aria-label': `Remove ${city.name}`,
+                        onClick: () => {
+                            state.cities.splice(index, 1)
+                            state.selected = Math.min(state.selected, state.cities.length - 1)
+                            saved.save(state)
+                            toast(`${city.name} removed`)
+                            show()
+                        },
+                    }, '\u00d7'))),
+                addButton('Add a city', async name => {
+                    try {
+                        const found = await getJSON(`https://geocoding-api.open-meteo.com/v1/search?${new URLSearchParams({ name, count: 1, language: 'en', format: 'json' })}`)
+                        const place = found.results?.[0]
+                        if (!place) return toast(`Couldn't find "${name}"`)
+                        state.cities.push({ name: place.name, country: place.country || '', latitude: place.latitude, longitude: place.longitude })
+                        state.selected = state.cities.length - 1
+                        saved.save(state)
+                        toast(`${place.name} added`)
+                        show()
+                    } catch {
+                        toast('City search needs the internet; try again later')
+                    }
+                }))
+        }
+
+        async function show() {
+            renderCities()
+            drawClimate()
+            const city = state.cities[state.selected]
+            document.getElementById('now').replaceChildren(el('p', { className: 'muted' }, `Loading weather for ${city.name}...`))
+            const weather = await fetchWeather(city)
+            if (state.cities[state.selected] !== city) return
+            const notice = document.getElementById('notice')
+            notice.hidden = weather.live
+            notice.textContent = weather.live ? '' : 'Live weather could not be reached, so this is sample weather.'
+            const [icon, label] = look(weather.current.code)
+            const now = document.getElementById('now')
+            now.replaceChildren(
+                icon,
+                el('div', {}, el('span', { className: 'temp' }, `${Math.round(weather.current.temperature)}\u00b0F`)),
+                el('div', { className: 'details' },
+                    el('h2', {}, `${city.name}${city.country ? `, ${city.country}` : ''}`),
+                    el('span', {}, label),
+                    el('span', { className: 'muted' }, `Wind ${Math.round(weather.current.wind)} mph`)))
+            flash(now)
+            document.getElementById('forecast').replaceChildren(...weather.daily.slice(1, 4).map((day, index) => {
+                const [dayIcon, dayLabel] = look(day.code)
+                const name = weather.live
+                    ? new Date(`${day.date}T12:00`).toLocaleDateString(undefined, { weekday: 'long' })
+                    : `Day ${index + 1}`
+                return el('div', { className: 'panel animate-in', style: `--i: ${index}` },
+                    el('strong', {}, name),
+                    el('div', {}, dayIcon),
+                    el('div', {}, dayLabel),
+                    el('div', { className: 'muted' }, `${Math.round(day.max)}\u00b0 / ${Math.round(day.min)}\u00b0`))
+            }))
+            const source = document.getElementById('source')
+            source.replaceChildren(weather.live
+                ? el('span', {}, 'Check it yourself: ', el('a', { href: weather.url, target: '_blank', rel: 'noopener' }, 'the raw forecast data'))
+                : 'Sample data from data/weather.json')
+        }
+
+        const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        const climateMemory = store('weather-climate')
+        let view = '3d'
+        let drawn = ''
+
+        function archiveUrl(city, year) {
+            const query = new URLSearchParams({
+                latitude: city.latitude, longitude: city.longitude, start_date: `${year}-01-01`,
+                end_date: `${year}-12-31`, daily: 'temperature_2m_mean', timezone: 'auto', temperature_unit: 'fahrenheit',
+            })
+            return `https://archive-api.open-meteo.com/v1/archive?${query}`
+        }
+
+        // Each month's average temperature for one city: remembered first, then live, then the sample.
+        async function climateFor(city, year) {
+            const key = `${city.latitude},${city.longitude},${year}`
+            const remembered = climateMemory.load({})
+            if (Array.isArray(remembered[key])) return { months: remembered[key], live: true }
+            try {
+                const data = await getJSON(archiveUrl(city, year))
+                const sums = Array(12).fill(0)
+                const counts = Array(12).fill(0)
+                data.daily.time.forEach((day, index) => {
+                    const value = data.daily.temperature_2m_mean[index]
+                    if (value === null) return
+                    sums[Number(day.slice(5, 7)) - 1] += value
+                    counts[Number(day.slice(5, 7)) - 1] += 1
+                })
+                if (counts.includes(0)) throw new Error('Part of the year is missing')
+                const months = sums.map((sum, month) => Math.round(sum / counts[month]))
+                climateMemory.save({ ...climateMemory.load({}), [key]: months })
+                return { months, live: true }
+            } catch {
+                const months = (sample.climate || SAMPLE.climate).months[city.name]
+                return months ? { months, live: false } : null
+            }
+        }
+
+        async function drawClimate() {
+            const year = (sample.climate || SAMPLE.climate).year
+            const cities = state.cities.slice(0, 6)
+            const key = `${view}|${cities.map(city => `${city.latitude},${city.longitude}`).join(';')}`
+            if (key === drawn) return
+            drawn = key
+            const found = await Promise.all(cities.map(city => climateFor(city, year)))
+            if (key !== drawn) return
+            const rows = cities.map((city, index) => ({ city, ...found[index] })).filter(row => row.months)
+            const box = document.getElementById('climate')
+            const names = rows.map(row => row.city.name)
+            const points = rows.flatMap((row, y) => row.months.map((value, x) => [x, y, value]))
+            const values = points.map(point => point[2])
+            const colors = chartColors()
+            const light = '#d7e7ee'
+            const faint = 'rgba(255, 255, 255, 0.12)'
+            const tooltip = { formatter: item => `${echarts.format.encodeHTML(names[item.value[1]])}, ${MONTHS[item.value[0]]}: <b>${item.value[2]}\u00b0F</b>` }
+            const visualMap = { show: false, min: Math.min(...values), max: Math.max(...values), inRange: { color: colors.heat } }
+            const threeD = view === '3d' && can3D()
+            document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === view)))
+            document.getElementById('climate-caption').textContent = threeD
+                ? `Average \u00b0F each month in ${year}. Drag to turn it.`
+                : `Average \u00b0F each month in ${year}. Blue is cold, red is hot.`
+            const first = rows[0]
+            document.getElementById('climate-source').replaceChildren(!first ? 'No monthly data could be found for these cities.'
+                : first.live ? el('span', {}, 'Check it yourself: ', el('a', { href: archiveUrl(first.city, year), target: '_blank', rel: 'noopener' }, `the raw ${year} data for ${first.city.name}`))
+                    : 'Sample numbers from data/weather.json, because live history could not be reached.')
+            if (!rows.length) return
+            const axis = data => ({ type: 'category', data, axisLabel: { color: light, fontSize: 12, textStyle: { color: light, fontSize: 12 } }, axisLine: { lineStyle: { color: faint } }, axisTick: { show: false } })
+            // A narrow chart needs the camera further back to fit every month in.
+            const distance = box.clientWidth < 500 ? 310 : box.clientWidth < 720 ? 250 : 210
+            chart(box, threeD ? {
+                tooltip, visualMap,
+                xAxis3D: { ...axis(MONTHS), name: '' },
+                yAxis3D: { ...axis(names), name: '' },
+                zAxis3D: { type: 'value', name: '\u00b0F', nameTextStyle: { color: light }, axisLabel: { textStyle: { color: light } }, axisLine: { lineStyle: { color: faint } } },
+                grid3D: {
+                    boxWidth: 200, boxDepth: Math.max(50, names.length * 22), boxHeight: 60,
+                    splitLine: { lineStyle: { color: faint } }, axisPointer: { lineStyle: { color: '#ffffff' } },
+                    light: { main: { intensity: 1.5, shadow: true, alpha: 50, beta: 35 }, ambient: { intensity: 0.65 } },
+                    viewControl: { alpha: 22, beta: 35, distance, autoRotate: true, autoRotateSpeed: 4, autoRotateAfterStill: 4, zoomSensitivity: 0, panSensitivity: 0 },
+                },
+                series: [{
+                    type: 'bar3D', data: points, shading: 'lambert', bevelSize: 0.3, bevelSmoothness: 4,
+                    emphasis: { label: { show: true, formatter: item => `${item.value[2]}\u00b0`, textStyle: { color: '#ffffff', fontSize: 14, backgroundColor: 'rgba(15, 42, 54, 0.8)', padding: [3, 6] } } },
+                }],
+            } : {
+                tooltip, visualMap,
+                grid: { top: 16, right: 16, bottom: 12, left: 12, containLabel: true },
+                xAxis: { ...axis(MONTHS), position: 'top' },
+                yAxis: { ...axis(names), inverse: true, axisLabel: { color: light, fontSize: 13, fontWeight: 700 } },
+                series: [{
+                    type: 'heatmap', data: points,
+                    label: { show: true, color: '#ffffff', fontWeight: 700, formatter: item => `${item.value[2]}\u00b0`, textBorderColor: 'rgba(0, 0, 0, 0.35)', textBorderWidth: 2 },
+                    itemStyle: { borderColor: '#0f2a36', borderWidth: 3, borderRadius: 8 },
+                }],
+            }, { fresh: true })
+        }
+
+        document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => {
+            view = button.dataset.view
+            drawClimate()
+        }))
+
+        async function start() {
+            sample = await loadJSON('data/weather.json', SAMPLE)
+            const remembered = saved.load(null)
+            state = valid(remembered) ? remembered : { cities: sample.cities, selected: 0 }
+            if (!state.cities[state.selected]) state.selected = 0
+            show()
+        }
+        start()
+    </script>
+</body>
+</html>

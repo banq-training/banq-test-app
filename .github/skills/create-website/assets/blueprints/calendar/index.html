@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Calendar</title>
+    <link rel="stylesheet" href="css/workshop.css">
+    <style>
+        .nav { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+        .nav h2 { min-width: 11rem; text-align: center; }
+        @media (max-width: 480px) { .nav h2 { min-width: 0; } }
+        .day-list { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+    </style>
+</head>
+<body data-theme="green">
+    <header class="app-header">
+        <div class="container hero">
+            <div>
+                <p class="logo"><span class="logo-mark" aria-hidden="true">M</span>My Calendar</p>
+                <h1>Everything planned, day by day</h1>
+                <p>Press + on a day to add a note, drag notes between days, and switch views.</p>
+            </div>
+            <img class="hero-art" src="art/hero-calendar.svg" alt="">
+        </div>
+    </header>
+
+    <main class="container main">
+        <section class="panel animate-in">
+            <div class="toolbar">
+                <div class="nav">
+                    <button type="button" class="ghost" id="previous" aria-label="Previous">&lsaquo;</button>
+                    <h2 id="heading" aria-live="polite"></h2>
+                    <button type="button" class="ghost" id="next" aria-label="Next">&rsaquo;</button>
+                    <button type="button" class="ghost" id="today">Today</button>
+                </div>
+                <div class="tabs" role="group" aria-label="View" id="views"></div>
+            </div>
+            <div class="calendar" id="calendar"></div>
+            <div class="toolbar" style="margin: 1rem 0 0">
+                <span class="muted" id="count"></span>
+            </div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Your notes are remembered in this browser.</footer>
+
+    <script src="js/workshop.js"></script>
+    <script>
+        const { el, store, loadJSON, addButton, enableBoard, toast, flash, newId } = window.Workshop
+        const SAMPLE = {
+            items: [
+                { id: 'c1', text: 'Team lunch', dayOffset: 0 },
+                { id: 'c2', text: 'Project check-in', dayOffset: 1 },
+                { id: 'c3', text: 'Plan next week', dayOffset: 3 },
+            ],
+        }
+        const VIEWS = { month: 'Month', week: 'Week', workdays: 'Workdays' }
+        const DAY_ART = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+        const saved = store('calendar')
+        let state = { view: 'month', items: [] }
+        let cursor = new Date()
+
+        const pad = number => String(number).padStart(2, '0')
+        const iso = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+        const addDays = (date, days) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
+        // Weeks start on Sunday, as on US calendars; the Workdays view skips to Monday.
+        const startOfWeek = date => addDays(date, -date.getDay())
+        // An empty calendar means there is nothing of the learner's left to keep, so the
+        // examples load themselves again rather than leaving a blank page.
+        const valid = data => data && Array.isArray(data.items) && data.items.length > 0
+            && data.items.every(item => item.date)
+        // Sample notes use offsets from today so they always appear in the current week.
+        const withDates = data => ({ view: 'month', items: data.items.map(({ dayOffset, ...item }) => ({ ...item, date: iso(addDays(new Date(), dayOffset || 0)) })) })
+
+        function update(message, changedId) {
+            saved.save(state)
+            render()
+            if (message) toast(message)
+            if (changedId) flash(document.querySelector(`[data-card-id="${changedId}"]`))
+        }
+
+        function visibleDays() {
+            if (state.view === 'month') {
+                const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1)
+                const last = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0)
+                const days = []
+                for (let day = startOfWeek(first); day <= addDays(startOfWeek(last), 6); day = addDays(day, 1)) days.push(day)
+                return days
+            }
+            const start = startOfWeek(cursor)
+            const firstDay = state.view === 'workdays' ? 1 : 0
+            return Array.from({ length: state.view === 'week' ? 7 : 5 }, (_, index) => addDays(start, firstDay + index))
+        }
+
+        function chip(item) {
+            return el('div', { className: 'chip', draggable: 'true', 'data-card-id': item.id },
+                el('span', { className: 'card-text', title: item.text }, item.text),
+                el('button', {
+                    type: 'button', className: 'remove', 'aria-label': `Remove ${item.text}`,
+                    onClick: () => { state.items = state.items.filter(entry => entry.id !== item.id); update('Removed') },
+                }, '\u00d7'))
+        }
+
+        function render() {
+            const days = visibleDays()
+            const columns = state.view === 'workdays' ? 5 : 7
+            const todayKey = iso(new Date())
+            const heading = document.getElementById('heading')
+            heading.textContent = state.view === 'month'
+                ? cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+                : `Week of ${days[0].toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
+
+            document.getElementById('views').replaceChildren(...Object.entries(VIEWS).map(([key, label]) => el('button', {
+                type: 'button', 'aria-pressed': String(state.view === key),
+                onClick: () => { state.view = key; update() },
+            }, label)))
+
+            const calendar = document.getElementById('calendar')
+            calendar.style.setProperty('--days', columns)
+            const names = days.slice(0, columns).map(day => el('div', { className: 'weekday' },
+                el('img', { className: 'day-art', src: Workshop.asset(`art/${DAY_ART[day.getDay()]}.svg`), alt: '', onError: event => event.target.remove() }),
+                day.toLocaleDateString(undefined, { weekday: 'short' })))
+            calendar.replaceChildren(...names, ...days.map((day, index) => {
+                const key = iso(day)
+                const items = state.items.filter(item => item.date === key)
+                const outside = state.view === 'month' && day.getMonth() !== cursor.getMonth()
+                const label = day.toLocaleDateString(undefined, state.view === 'month' ? { day: 'numeric' } : { weekday: 'short', day: 'numeric' })
+                return el('section', {
+                    className: `day animate-in${outside ? ' is-outside' : ''}${key === todayKey ? ' is-today' : ''}`,
+                    style: `--i: ${index % 7}`, 'data-column': key,
+                    'aria-label': day.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }),
+                },
+                    el('div', { className: 'day-head' },
+                        el('span', {}, label),
+                        addButton(`Add a note on ${day.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}`, text => {
+                            const item = { id: newId(), text, date: key }
+                            state.items.push(item)
+                            update('Note added', item.id)
+                        })),
+                    el('div', { className: 'day-list' }, items.map(chip)))
+            }))
+            document.getElementById('count').textContent = `${state.items.length} notes planned`
+        }
+
+        function step(direction) {
+            cursor = state.view === 'month'
+                ? new Date(cursor.getFullYear(), cursor.getMonth() + direction, 1)
+                : addDays(cursor, direction * 7)
+            render()
+        }
+
+        document.getElementById('previous').addEventListener('click', () => step(-1))
+        document.getElementById('next').addEventListener('click', () => step(1))
+        document.getElementById('today').addEventListener('click', () => { cursor = new Date(); render() })
+        enableBoard(document.getElementById('calendar'), (id, date) => {
+            const item = state.items.find(entry => entry.id === id)
+            if (!item || item.date === date) return
+            item.date = date
+            update('Moved', id)
+        })
+
+        async function start() {
+            const remembered = saved.load(null)
+            state = valid(remembered) ? remembered : withDates(await loadJSON('data/events.json', SAMPLE))
+            if (!VIEWS[state.view]) state.view = 'month'
+            render()
+        }
+        start()
+    </script>
+</body>
+</html>

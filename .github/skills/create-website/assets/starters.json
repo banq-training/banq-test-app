@@ -1,0 +1,200 @@
+{
+    "source_mode": "synthetic_workshop",
+    "default": "project",
+    "any_page_ideas": [
+        "Change the color theme, such as \"make it purple\" or \"a warm sunset gradient\"",
+        "Change the headline, the wording and the picture at the top",
+        "Add tabs so you can switch between two views of the same page",
+        "Show one clear number you can check yourself, such as a count or a progress bar"
+    ],
+    "starters": [
+        {
+            "id": "project",
+            "title": "Project Planner",
+            "summary": "Day columns with a + to add tasks, drag between days, tick when done, and a progress bar.",
+            "data_file": "data/tasks.json",
+            "storage_key": "project-planner",
+            "expected": {
+                "item_count": 4,
+                "done_count": 1
+            },
+            "manual_check": "4 tasks to start and 1 is ticked, so the bar reads 1 of 4 done. Tick one more: 2 of 4.",
+            "later_ideas": [
+                "Rename the columns to your own stages, such as To Do, In Progress, Review and Done",
+                "Add a chart showing how much work is left in each stage",
+                "Add an owner name and a due date to each card",
+                "Give each card a priority chip and make the urgent ones stand out",
+                "Add tabs to switch between every task and only the unfinished ones"
+            ],
+            "try_it": "Try it: press + to add something, drag it, or remove it."
+        },
+        {
+            "id": "calendar",
+            "title": "Calendar",
+            "summary": "A month grid with a + on every day, notes you can drag between days, and Month, Week and Workdays views.",
+            "data_file": "data/events.json",
+            "storage_key": "calendar",
+            "expected": {
+                "item_count": 3
+            },
+            "manual_check": "3 notes to start: today, tomorrow and in three days. Add one and the count shows 4 notes planned.",
+            "later_ideas": [
+                "Color each note by type, such as meeting, deadline or day off",
+                "Add a start time to each note and keep each day in time order",
+                "Add an Agenda tab beside Month, Week and Workdays",
+                "Show how many notes each week has",
+                "Mark your country's public holidays so they stand out from your own notes"
+            ],
+            "try_it": "Try it: press + on a day to add a note, drag it to another day, or switch to Week."
+        },
+        {
+            "id": "ideas",
+            "title": "Ideas Wall",
+            "summary": "Colorful sticky notes: + to add an idea, drag to put the best first, and x to remove.",
+            "data_file": "data/ideas.json",
+            "storage_key": "ideas-wall",
+            "expected": {
+                "item_count": 3
+            },
+            "manual_check": "3 ideas to start. Add one: 4 ideas. Remove one: back to 3.",
+            "later_ideas": [
+                "Add a vote button with a count, and sort the best idea to the front",
+                "Group the ideas into themes with tabs",
+                "Add a search box that filters the notes as you type",
+                "Let each note have its own color",
+                "Show the top idea in a highlighted panel above the wall"
+            ],
+            "try_it": "Try it: press + to pin an idea, drag the best one to the front, or remove one."
+        },
+        {
+            "id": "weather",
+            "title": "Weather",
+            "summary": "City buttons, + to add any city, today's weather and the next three days, and a 3D chart of each city's year, from the public Open-Meteo API.",
+            "data_file": "data/weather.json",
+            "storage_key": "weather",
+            "live_api": "Open-Meteo (no key; free tier is for non-commercial use)",
+            "expected": {
+                "item_count": 3
+            },
+            "manual_check": "3 cities to start. Open 'the raw forecast data' link and compare today's temperature with the page. In the 3D chart, point at Princeton's July bar: 79°F.",
+            "later_ideas": [
+                "Add a switch between Fahrenheit and Celsius",
+                "Add a \"what to wear\" tip that follows the temperature",
+                "Show sunrise and sunset times",
+                "Draw a simple chart of the temperature across the next few days",
+                "Add tabs for today and the rest of the week"
+            ],
+            "try_it": "Try it: press + to add your home city, then drag the 3D chart to turn it."
+        },
+        {
+            "id": "map",
+            "title": "Princeton Map",
+            "summary": "Princeton's sights on a map: choose a pin to read about it, filter by type, add your own place, and see the town in 3D.",
+            "data_file": "data/places.json",
+            "storage_key": "princeton-map",
+            "expected": {
+                "item_count": 18
+            },
+            "try_it": "Try it: choose a pin, filter by History, then press 3D.",
+            "manual_check": "18 places to start. Choose History: 6 pins and 6 cards stay. Press +, type a name and click the map: 19 places.",
+            "later_ideas": [
+                "Add a walking route that joins three places in order",
+                "Add opening hours and a photo to each place card",
+                "Add a search box that finds a place by name",
+                "Show a chart of how many places each type has",
+                "Mark the places you have visited with a star"
+            ]
+        },
+        {
+            "id": "photo",
+            "title": "Photo Studio",
+            "summary": "Pick a photo of a thing, place or pet, choose a style like watercolor or pixel art, and the workshop AI repaints it; save the best to a gallery.",
+            "data_file": "data/gallery.json",
+            "storage_key": "photo-studio",
+            "ai": "Workshop picture model through the Website preview; photos of people, documents and screens are refused.",
+            "expected": {
+                "item_count": 6
+            },
+            "try_it": "Try it: pick the sleepy cat, choose Watercolor, and press Make it.",
+            "manual_check": "6 pictures in the gallery to start. Make the sleepy cat into a watercolor and save it: the gallery shows 7.",
+            "later_ideas": [
+                "Add your own style button, such as 'make it look like a postcard'",
+                "Show the newest picture large at the top of the gallery",
+                "Add a title box so you can name a picture before saving it",
+                "Add a slideshow button that shows the gallery one picture at a time",
+                "Add a favorite star to each picture and show favorites first"
+            ]
+        }
+    ],
+    "idea_patterns": [
+        {
+            "id": "tracker",
+            "title": "Request Tracker",
+            "summary": "A form to add requests, stage filters and search, a stage drop-down on every card, overdue flags, and four counts at the top.",
+            "suits": "Requests, cases or records with an owner, a stage and a due date: a request intake, a contract register, a training roster, a policy tracker.",
+            "data_file": "data/requests.json",
+            "storage_key": "request-tracker",
+            "expected": {
+                "item_count": 5,
+                "done_count": 1,
+                "overdue_count": 1
+            },
+            "try_it": "Try it: add a request with the form, then move it to the next stage with its drop-down.",
+            "manual_check": "5 requests to start: 4 open, 1 overdue in red, 1 done. Set the overdue one to Done: overdue shows 0 and done shows 2.",
+            "later_ideas": [
+                "Rename the stages to your own process, such as Submitted, Assessed, Approved and Closed",
+                "Add a notes box to each request that opens when you click its title",
+                "Add a chart showing how many requests sit in each stage",
+                "Add a filter for priority beside the stage tabs",
+                "Draft a reminder email for each overdue request with one button"
+            ]
+        },
+        {
+            "id": "dashboard",
+            "title": "Team Dashboard",
+            "summary": "Four headline numbers, month-by-month bars with a what-if growth forecast, a share-by-region ring, region filters, and a table where every number can be changed.",
+            "suits": "Numbers to watch and compare: monthly figures, targets, a forecast, or a report someone builds in a spreadsheet today.",
+            "data_file": "data/metrics.json",
+            "storage_key": "team-dashboard",
+            "expected": {
+                "item_count": 6,
+                "total": 2778,
+                "top_group": "Northeast",
+                "top_total": 865
+            },
+            "try_it": "Try it: choose South, then drag the what-if slider and watch the dashed forecast move.",
+            "manual_check": "6 months to start: total requests 2,778 and the biggest region is Northeast with 865. Choose South: the total reads 643. Change June's South from 121 to 221: it reads 743.",
+            "later_ideas": [
+                "Rename the regions to your own teams, products or sites",
+                "Add a target line to the monthly chart and color the months that missed it",
+                "Add a second measure, such as cost, with its own headline number",
+                "Show the on-time percentage as a line across the months",
+                "Add a tab that shows the same numbers as a 3D chart"
+            ]
+        },
+        {
+            "id": "game",
+            "title": "Lab Chase game",
+            "summary": "A funny 3D maze game: a scientist chases escaped molecules, collects glowing data points, and dodges meeting invites; a coffee lets you decline them. Hold the arrow keys or on-screen arrows to run, a top view, and a score board.",
+            "suits": "A game played with the keyboard: chasing, collecting or escaping something in a maze, with a score.",
+            "data_file": "data/game.json",
+            "storage_key": "lab-chase",
+            "expected": {
+                "item_count": 3,
+                "dots": 135,
+                "coffee": 4,
+                "lives": 3
+            },
+            "try_it": "Try it: press Start, then hold an arrow key to run (let go to stop), catch a molecule and grab a coffee.",
+            "manual_check": "3 scores on the board and 135 data points to start. Press Start and hold an arrow key until you run over one data point: 134 left; let go and the scientist stops and the score shows 10. Let an invite catch you: lives drop from 3 to 2.",
+            "later_ideas": [
+                "Change the funny lines to your own team's in-jokes",
+                "Redraw the maze so the benches spell your team's initial",
+                "Add a timer and a bonus for finishing a level quickly",
+                "Make the scientist run faster for five seconds after catching a molecule",
+                "Add a fourth invite that only joins from level 3"
+            ]
+        }
+    ],
+    "own_idea": "Describe anything in one sentence, such as a team lunch planner, and get it built in the same style."
+}

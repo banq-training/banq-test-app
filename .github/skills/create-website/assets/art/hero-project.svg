@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120">
+  <style>
+    .tick { fill: none; stroke: #2a9d8f; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; animation: draw 4.5s ease-in-out infinite; }
+    .k2 { animation-delay: 0.6s; } .k3 { animation-delay: 1.2s; }
+    .board { animation: float 5s ease-in-out infinite; }
+    .pencil { transform-origin: 128px 90px; animation: write 1.6s ease-in-out infinite; }
+    @keyframes draw { 0%, 10% { stroke-dashoffset: 24; } 35%, 85% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 24; } }
+    @keyframes float { 50% { transform: translateY(-4px); } }
+    @keyframes write { 50% { transform: rotate(-6deg) translate(-3px, 2px); } }
+    @media (prefers-reduced-motion: reduce) { .tick { animation: none; stroke-dashoffset: 0; } .board, .pencil { animation: none; } }
+  </style>
+  <g class="board">
+    <rect x="34" y="14" width="84" height="100" rx="10" fill="#ffffff" opacity="0.95"/>
+    <rect x="58" y="8" width="36" height="14" rx="5" fill="#264653"/>
+    <rect x="50" y="36" width="14" height="14" rx="3" fill="#e9f5f2" stroke="#2a9d8f" stroke-width="2"/>
+    <rect x="50" y="60" width="14" height="14" rx="3" fill="#e9f5f2" stroke="#2a9d8f" stroke-width="2"/>
+    <rect x="50" y="84" width="14" height="14" rx="3" fill="#e9f5f2" stroke="#2a9d8f" stroke-width="2"/>
+    <path class="tick" d="M52 43l4 4 7-8"/>
+    <path class="tick k2" d="M52 67l4 4 7-8"/>
+    <path class="tick k3" d="M52 91l4 4 7-8"/>
+    <rect x="72" y="40" width="34" height="6" rx="3" fill="#c7d8e6"/>
+    <rect x="72" y="64" width="28" height="6" rx="3" fill="#c7d8e6"/>
+    <rect x="72" y="88" width="32" height="6" rx="3" fill="#c7d8e6"/>
+  </g>
+  <g class="pencil">
+    <rect x="118" y="44" width="10" height="46" rx="2" transform="rotate(20 123 67)" fill="#f4a261"/>
+    <path d="M131 90l-6 12 -2-13z" fill="#264653"/>
+  </g>
+</svg>

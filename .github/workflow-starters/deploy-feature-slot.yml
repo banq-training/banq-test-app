@@ -1,0 +1,66 @@
+name: Deploy feature slot
+
+# Day 5 starter: a test copy of your website for every pull request (continuous deployment).
+# When "Check my website" passes on a pull request, this publishes that pull request to your
+# feature slot: your website's name plus -feature. A strip at the top of the page shows the pull
+# request, version and build, and the pull request gets a View deployment button. Your real
+# address, the production slot, still changes only from main, after you approve. For Copilot's
+# pull requests GitHub asks you first: Actions > Deploy feature slot > Approve and run.
+# Copy it to .github/workflows/deploy-feature-slot.yml; it starts working once it is on main.
+# No password or secret is involved: like publishing, it runs from main, and Azure trusts only that.
+on:
+  workflow_run:
+    workflows: ["Check my website"]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  publish:
+    # Only pull requests whose checks passed. A push to main is the production slot's job.
+    if: >-
+      ${{ !github.event.repository.is_template
+      && github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: feature-slot
+      cancel-in-progress: true
+    uses: agentic-dev-labs/copilot-hackathon-template/.github/workflows/website-publisher.yml@main
+    with:
+      website-name: ${{ vars.WEBSITE_NAME }}
+      slot: feature
+      commit: ${{ github.event.workflow_run.head_sha }}
+      pull-request: ${{ github.event.workflow_run.pull_requests[0].number }}
+      version: 1.0.${{ github.run_number }}-feature
+
+  link:
+    name: Feature slot link
+    needs: publish
+    if: ${{ needs.publish.outputs.url != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      deployments: write
+      statuses: write
+    steps:
+      # The pull request then says "deployed to feature-slot" with a View deployment button, and
+      # its checks list a Feature slot line that opens the same address.
+      - name: Show the feature slot on the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT: ${{ github.event.workflow_run.head_sha }}
+          URL: ${{ needs.publish.outputs.url }}
+          BUILD: ${{ github.run_number }}
+        run: |
+          DEPLOYMENT="$(jq -n --arg ref "$COMMIT" --arg build "$BUILD" \
+            '{ref: $ref, environment: "feature-slot", auto_merge: false, required_contexts: [],
+              description: ("Build " + $build + " in the feature slot")}' |
+            gh api --method POST "repos/$GITHUB_REPOSITORY/deployments" --input - --jq .id)"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/deployments/$DEPLOYMENT/statuses" \
+            -f state=success -f environment_url="$URL" -f description="Build $BUILD is ready to try." > /dev/null
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$COMMIT" \
+            -f state=success -f context="Feature slot" -f target_url="$URL" \
+            -f description="Build $BUILD is ready to try." > /dev/null

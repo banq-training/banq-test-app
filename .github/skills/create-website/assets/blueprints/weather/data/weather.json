@@ -1,0 +1,25 @@
+{
+  "cities": [
+    { "name": "Princeton", "country": "United States", "latitude": 40.35, "longitude": -74.66 },
+    { "name": "Copenhagen", "country": "Denmark", "latitude": 55.68, "longitude": 12.57 },
+    { "name": "Sydney", "country": "Australia", "latitude": -33.87, "longitude": 151.21 }
+  ],
+  "offline": {
+    "current": { "temperature": 57, "code": 2, "wind": 7 },
+    "daily": [
+      { "date": "2026-01-01", "code": 2, "max": 59, "min": 46 },
+      { "date": "2026-01-02", "code": 61, "max": 55, "min": 45 },
+      { "date": "2026-01-03", "code": 0, "max": 63, "min": 48 },
+      { "date": "2026-01-04", "code": 3, "max": 57, "min": 46 }
+    ]
+  },
+  "climate": {
+    "year": 2025,
+    "note": "Average of each day's mean temperature (\u00b0F) per month, from Open-Meteo historical weather (ERA5).",
+    "months": {
+      "Princeton": [28, 33, 46, 54, 62, 73, 79, 72, 68, 57, 45, 31],
+      "Copenhagen": [37, 35, 42, 49, 54, 61, 65, 64, 60, 52, 44, 42],
+      "Sydney": [72, 73, 72, 66, 61, 53, 54, 56, 62, 68, 69, 71]
+    }
+  }
+}

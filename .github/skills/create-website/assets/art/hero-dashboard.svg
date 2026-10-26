@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120">
+  <style>
+    .panel { animation: float 5s ease-in-out infinite; }
+    .bar { transform-box: fill-box; transform-origin: bottom; animation: grow 4.5s ease-in-out infinite; }
+    .b2 { animation-delay: 0.25s; } .b3 { animation-delay: 0.5s; } .b4 { animation-delay: 0.75s; }
+    .trend { fill: none; stroke: #264653; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 90; stroke-dashoffset: 90; animation: draw 4.5s ease-in-out infinite; }
+    .donut { transform-origin: 128px 36px; animation: turn 9s linear infinite; }
+    @keyframes float { 50% { transform: translateY(-4px); } }
+    @keyframes grow { 0%, 8% { transform: scaleY(0.25); } 40%, 85% { transform: scaleY(1); } 100% { transform: scaleY(0.25); } }
+    @keyframes draw { 0%, 20% { stroke-dashoffset: 90; } 55%, 85% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 90; } }
+    @keyframes turn { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .panel, .bar, .donut { animation: none; } .trend { animation: none; stroke-dashoffset: 0; } }
+  </style>
+  <g class="panel">
+    <rect x="14" y="26" width="104" height="84" rx="12" fill="#ffffff" opacity="0.95"/>
+    <rect x="26" y="36" width="40" height="7" rx="3.5" fill="#264653"/>
+    <rect class="bar" x="30" y="72" width="14" height="28" rx="3" fill="#2a9d8f"/>
+    <rect class="bar b2" x="50" y="62" width="14" height="38" rx="3" fill="#2a9d8f"/>
+    <rect class="bar b3" x="70" y="56" width="14" height="44" rx="3" fill="#3a6fd8"/>
+    <rect class="bar b4" x="90" y="48" width="14" height="52" rx="3" fill="#3a6fd8"/>
+    <path class="trend" d="M37 66 L57 58 L77 50 L97 40"/>
+  </g>
+  <g class="donut">
+    <circle cx="128" cy="36" r="16" fill="none" stroke="#ffffff" stroke-width="10" opacity="0.95"/>
+    <circle cx="128" cy="36" r="16" fill="none" stroke="#f6b21a" stroke-width="10" stroke-dasharray="40 101"/>
+    <circle cx="128" cy="36" r="16" fill="none" stroke="#e4572e" stroke-width="10" stroke-dasharray="22 101" stroke-dashoffset="-40"/>
+  </g>
+</svg>

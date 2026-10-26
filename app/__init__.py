@@ -1,0 +1,1 @@
+"""Attendee-facing web application."""

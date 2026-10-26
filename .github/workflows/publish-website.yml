@@ -1,0 +1,31 @@
+name: Publish my website
+
+# Puts site/ on the internet whenever you push it. Choose a name once with /publish-website
+# (it sets websiteName in config.json). No password or secret is involved: GitHub vouches for
+# the workshop's publisher, and Azure accepts only that.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "site/**"
+      - "config.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-website
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    if: ${{ !github.event.repository.is_template }}
+    uses: agentic-dev-labs/copilot-hackathon-template/.github/workflows/website-publisher.yml@main
+    with:
+      website-name: ${{ vars.WEBSITE_NAME }}
+      # Day 4: on the next line, delete the # and the space after it, keeping the indentation, to
+      # write this run's number into your website as its version.
+      # version: 1.0.${{ github.run_number }}

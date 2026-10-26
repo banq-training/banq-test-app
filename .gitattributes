@@ -1,0 +1,4 @@
+*.sh text eol=lf
+# Copied, unchanged chart library builds: keep their bytes exactly and skip diffs.
+.github/skills/create-website/assets/js/vendor/*.min.js -text -diff linguist-vendored
+.github/skills/create-website/assets/game/*.js -text -diff linguist-vendored

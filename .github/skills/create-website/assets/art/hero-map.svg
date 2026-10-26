@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120">
+  <style>
+    .pin { animation: bounce 2.4s ease-in-out infinite; transform-origin: 108px 62px; }
+    .ring { animation: ring 2.4s ease-out infinite; transform-origin: 108px 76px; }
+    .route { stroke-dasharray: 5 6; animation: walk 3s linear infinite; }
+    @keyframes bounce { 50% { transform: translateY(-7px); } }
+    @keyframes ring { 0% { transform: scale(0.3); opacity: 0.9; } 100% { transform: scale(1.6); opacity: 0; } }
+    @keyframes walk { to { stroke-dashoffset: -22; } }
+    @media (prefers-reduced-motion: reduce) { .pin, .ring, .route { animation: none; } }
+  </style>
+  <path d="M18 30l38-12 40 12 42-12v76l-42 12-40-12-38 12z" fill="#ffffff"/>
+  <path d="M56 18v76M96 30v76" stroke="#d9e4ea" stroke-width="2"/>
+  <path d="M18 30l38-12v76l-38 12z" fill="#eef5f8"/>
+  <path d="M96 30l42-12v76l-42 12z" fill="#eef5f8"/>
+  <path d="M60 66c10-14 22-18 36-10" fill="none" stroke="#8ecae6" stroke-width="6" stroke-linecap="round"/>
+  <path d="M26 44c8 0 14 6 14 14" fill="none" stroke="#b7e4c7" stroke-width="10" stroke-linecap="round"/>
+  <path class="route" d="M34 84c14-6 22-22 40-18s22 14 34 10" fill="none" stroke="#f4a261" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="34" cy="84" r="4" fill="#f4a261"/>
+  <ellipse class="ring" cx="108" cy="76" rx="9" ry="4" fill="none" stroke="#e76f51" stroke-width="2"/>
+  <g class="pin">
+    <path d="M108 76c-9-12-14-19-14-27a14 14 0 0 1 28 0c0 8-5 15-14 27z" fill="#e76f51"/>
+    <circle cx="108" cy="49" r="5.5" fill="#ffffff"/>
+  </g>
+</svg>

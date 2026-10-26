@@ -1,0 +1,7 @@
+# The image needs only the dependency lists. Everything else, including private notes and
+# learner work, stays out of its build context.
+*
+!pyproject.toml
+!uv.lock
+!.devcontainer/website-preview/package.json
+!.devcontainer/website-preview/package-lock.json

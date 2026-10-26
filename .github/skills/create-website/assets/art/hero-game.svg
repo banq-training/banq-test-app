@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120">
+  <style>
+    .m { animation: hop 1.4s ease-in-out infinite; }
+    .b { animation: rise 2.4s ease-in infinite; opacity: 0; }
+    .b2 { animation-delay: .8s; } .b3 { animation-delay: 1.6s; }
+    @keyframes hop { 50% { transform: translate(-6px, -10px) rotate(-6deg); } }
+    @keyframes rise { 30% { opacity: .9; } 100% { transform: translateY(-34px); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .m, .b { animation: none; } .b { opacity: .7; } }
+  </style>
+  <path d="M40 18h32v8h-4v26l24 42c4 8-1 14-10 14H30c-9 0-14-6-10-14l24-42V26h-4z" fill="#ffffff" opacity=".95"/>
+  <path d="M31 76h50l10 18c3 6 0 10-7 10H28c-7 0-10-4-7-10z" fill="#2a9d8f"/>
+  <circle class="b" cx="48" cy="88" r="4" fill="#e9f5f2"/>
+  <circle class="b b2" cx="62" cy="92" r="3" fill="#e9f5f2"/>
+  <circle class="b b3" cx="55" cy="82" r="2.5" fill="#e9f5f2"/>
+  <g class="m">
+    <path d="M118 54l22-16M118 54l14 24" stroke="#264653" stroke-width="4"/>
+    <circle cx="140" cy="38" r="8" fill="#f4a261"/>
+    <circle cx="132" cy="78" r="7" fill="#5ee7c3"/>
+    <circle cx="116" cy="54" r="17" fill="#ff6fae"/>
+    <circle cx="110" cy="50" r="5" fill="#fff"/>
+    <circle cx="122" cy="50" r="5" fill="#fff"/>
+    <circle cx="111" cy="51" r="2.4" fill="#264653"/>
+    <circle cx="123" cy="51" r="2.4" fill="#264653"/>
+  </g>
+</svg>

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Request Tracker</title>
+    <link rel="stylesheet" href="css/workshop.css">
+    <style>
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; margin-bottom: 1rem; }
+        .stat { display: grid; gap: 0.1rem; }
+        .stat strong { font-size: 2rem; line-height: 1.1; font-weight: 800; color: var(--accent-strong); }
+        .stat span { color: var(--muted); font-weight: 600; }
+        .stat.is-alert { border-color: var(--danger); }
+        .stat.is-alert strong { color: var(--danger); }
+        .new-request { display: grid; grid-template-columns: minmax(0, 2.2fr) repeat(4, minmax(0, 1fr)) auto; gap: 0.6rem; align-items: end; margin-bottom: 1rem; }
+        .new-request label { display: grid; gap: 0.2rem; font-size: 0.85rem; font-weight: 650; color: var(--muted); }
+        .field { width: 100%; min-height: 40px; padding: 0.4rem 0.6rem; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); }
+        .primary { min-height: 40px; padding: 0.4rem 1.1rem; border: 0; border-radius: 99px; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; }
+        .primary:hover { background: var(--accent-strong); }
+        .search { flex: 1 1 220px; max-width: 320px; }
+        .toolbar .tabs { flex-wrap: wrap; max-width: 100%; border-radius: 20px; }
+        .list { display: grid; gap: 0.6rem; }
+        .card.request { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, auto) auto; align-items: center; gap: 0.5rem 0.9rem; }
+        .request-main { display: grid; gap: 0.35rem; min-width: 0; }
+        .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.7rem; color: var(--muted); font-size: 0.85rem; }
+        .priority-high { background: #fde4dc; color: #983521; }
+        .priority-medium { background: #fff4c2; color: #6b5200; }
+        .priority-low { background: var(--accent-soft); color: var(--accent-strong); }
+        .chip.is-late { background: #fdecea; color: var(--danger); font-weight: 700; }
+        @media (max-width: 760px) {
+            .new-request { grid-template-columns: 1fr 1fr; }
+            .new-request label:first-child { grid-column: 1 / -1; }
+            .card.request { grid-template-columns: minmax(0, 1fr) auto; }
+            .card.request select { grid-column: 1 / -1; grid-row: 2; }
+            .card.request .remove { grid-column: 2; grid-row: 1; }
+        }
+    </style>
+</head>
+<body data-theme="green">
+    <header class="app-header">
+        <div class="container hero">
+            <div>
+                <p class="logo"><span class="logo-mark" aria-hidden="true">M</span>My Request Tracker</p>
+                <h1>Every request in one clear list</h1>
+                <p>Add a request, move it through the stages, and see what is overdue at a glance.</p>
+            </div>
+            <img class="hero-art" src="art/hero-tracker.svg" alt="">
+        </div>
+    </header>
+
+    <main class="container main">
+        <section class="stats" aria-label="Summary">
+            <div class="panel stat animate-in"><strong id="s-total">0</strong><span>requests</span></div>
+            <div class="panel stat animate-in" style="--i: 1"><strong id="s-open">0</strong><span>open</span></div>
+            <div class="panel stat animate-in" style="--i: 2" id="stat-overdue"><strong id="s-overdue">0</strong><span>overdue</span></div>
+            <div class="panel stat animate-in" style="--i: 3"><strong id="s-done">0</strong><span>done</span></div>
+        </section>
+
+        <form class="panel new-request animate-in" style="--i: 4" id="new-request" aria-label="New request">
+            <label>Request<input class="field" id="f-title" maxlength="80" placeholder="What is needed?"></label>
+            <label>Owner<input class="field" id="f-owner" maxlength="40" placeholder="Name"></label>
+            <label>Type<select class="field" id="f-type"></select></label>
+            <label>Priority<select class="field" id="f-priority"><option>High</option><option selected>Medium</option><option>Low</option></select></label>
+            <label>Due<input class="field" id="f-due" type="date"></label>
+            <button class="primary" type="submit">Add request</button>
+        </form>
+
+        <section class="panel toolbar animate-in" style="--i: 5" aria-label="Filter">
+            <div class="tabs" role="group" aria-label="Show stage" id="filters"></div>
+            <input class="field search" id="search" type="search" placeholder="Search requests" aria-label="Search requests">
+        </section>
+
+        <div class="list" id="list"></div>
+    </main>
+
+    <footer class="page-footer">Your requests are remembered in this browser.</footer>
+
+    <script src="js/workshop.js"></script>
+    <script>
+        const { el, store, loadJSON, useColumns, toast, flash, newId } = window.Workshop
+        const SAMPLE = {
+            columns: ['New', 'In review', 'Approved', 'Done'],
+            types: ['Report', 'Automation', 'Process', 'Website'],
+            items: [
+                { id: 'r1', title: 'Refresh the monthly sales report', type: 'Report', priority: 'High', owner: 'Sam', status: 'In review', dueInDays: 3 },
+                { id: 'r2', title: 'Automate the weekly status email', type: 'Automation', priority: 'Medium', owner: 'Priya', status: 'New', dueInDays: 7 },
+                { id: 'r3', title: 'Write the vendor onboarding checklist', type: 'Process', priority: 'High', owner: 'Jordan', status: 'New', dueInDays: -2 },
+                { id: 'r4', title: 'Training completion overview', type: 'Report', priority: 'Low', owner: 'Alex', status: 'Approved', dueInDays: 10 },
+                { id: 'r5', title: 'Team contacts page', type: 'Website', priority: 'Low', owner: 'Morgan', status: 'Done', dueInDays: -5 },
+            ],
+        }
+        const saved = store('request-tracker')
+        let state = SAMPLE
+        let view = 'All'
+        let query = ''
+        // An empty list means there is nothing of the learner's left to keep, so the
+        // examples load themselves again rather than leaving a blank page.
+        const valid = data => data && Array.isArray(data.columns) && Array.isArray(data.items)
+            && data.items.length > 0
+
+        // Dates are YYYY-MM-DD in this browser's time zone; the examples are due relative to today.
+        const isoDay = (offset = 0) => {
+            const day = new Date()
+            day.setDate(day.getDate() + offset)
+            return day.toLocaleDateString('en-CA')
+        }
+        const nice = iso => new Date(`${iso}T00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        const withDates = items => items.map(({ dueInDays, ...item }) =>
+            item.due ? item : { ...item, due: isoDay(Number.isFinite(dueInDays) ? dueInDays : 7) })
+        const lastStage = () => state.columns[state.columns.length - 1]
+        const isLate = item => item.status !== lastStage() && Boolean(item.due) && item.due < isoDay()
+
+        function update(message, changedId) {
+            saved.save(state)
+            render()
+            if (message) toast(message)
+            if (changedId) flash(document.querySelector(`[data-card-id="${changedId}"]`))
+        }
+
+        function row(item, index, animate) {
+            const done = item.status === lastStage()
+            const late = isLate(item)
+            const priority = item.priority || 'Medium'
+            return el('article', {
+                className: `card request${animate ? ' animate-in' : ''}${done ? ' is-done' : ''}`,
+                style: `--i: ${index}`, 'data-card-id': item.id,
+            },
+                el('div', { className: 'request-main' },
+                    el('span', { className: 'card-text' }, item.title),
+                    el('div', { className: 'meta' },
+                        item.type && el('span', { className: 'chip' }, item.type),
+                        el('span', { className: `chip priority-${priority.toLowerCase()}` }, `${priority} priority`),
+                        item.owner && el('span', {}, `Owner: ${item.owner}`),
+                        item.due && el('span', { className: late ? 'chip is-late' : '' },
+                            late ? `Overdue since ${nice(item.due)}` : `Due ${nice(item.due)}`))),
+                el('select', {
+                    className: 'field', 'aria-label': `Stage of ${item.title}`,
+                    onChange: event => {
+                        item.status = event.target.value
+                        update(item.status === lastStage() ? 'Done. Nice work!' : `Moved to ${item.status}`, item.id)
+                    },
+                }, state.columns.map(name => el('option', { value: name, selected: name === item.status }, name))),
+                el('button', {
+                    type: 'button', className: 'remove', 'aria-label': `Remove ${item.title}`,
+                    onClick: () => { state.items = state.items.filter(entry => entry.id !== item.id); update('Removed') },
+                }, '\u00d7'))
+        }
+
+        function render(animate = true) {
+            const open = state.items.filter(item => item.status !== lastStage())
+            const overdue = open.filter(isLate).length
+            document.getElementById('s-total').textContent = state.items.length
+            document.getElementById('s-open').textContent = open.length
+            document.getElementById('s-overdue').textContent = overdue
+            document.getElementById('s-done').textContent = state.items.length - open.length
+            document.getElementById('stat-overdue').classList.toggle('is-alert', overdue > 0)
+
+            const stages = ['All', ...state.columns]
+            if (!stages.includes(view)) view = 'All'
+            const count = name => name === 'All' ? state.items.length : state.items.filter(item => item.status === name).length
+            document.getElementById('filters').replaceChildren(...stages.map(name => el('button', {
+                type: 'button', 'aria-pressed': String(view === name),
+                onClick: () => { view = name; render() },
+            }, `${name} ${count(name)}`)))
+
+            const words = query.trim().toLowerCase()
+            const shown = state.items
+                .filter(item => view === 'All' || item.status === view)
+                .filter(item => !words || [item.title, item.owner, item.type, item.priority].join(' ').toLowerCase().includes(words))
+                .sort((a, b) => (a.status === lastStage()) - (b.status === lastStage()) || (a.due || '').localeCompare(b.due || ''))
+            document.getElementById('list').replaceChildren(...(shown.length
+                ? shown.map((item, index) => row(item, index, animate))
+                : [el('p', { className: 'panel empty' }, 'No requests match. Choose All or clear the search.')]))
+        }
+
+        document.getElementById('new-request').addEventListener('submit', event => {
+            event.preventDefault()
+            const title = document.getElementById('f-title')
+            if (!title.value.trim()) return flash(title, 'shake')
+            const item = {
+                id: newId(), title: title.value.trim(),
+                type: document.getElementById('f-type').value,
+                priority: document.getElementById('f-priority').value,
+                owner: document.getElementById('f-owner').value.trim(),
+                status: state.columns[0],
+                due: document.getElementById('f-due').value || isoDay(7),
+            }
+            state.items.push(item)
+            event.target.reset()
+            document.getElementById('f-due').value = isoDay(7)
+            view = 'All'
+            update('Request added', item.id)
+            title.focus()
+        })
+        document.getElementById('search').addEventListener('input', event => { query = event.target.value; render(false) })
+
+        async function start() {
+            const remembered = saved.load(null)
+            const loaded = valid(remembered) ? remembered : await loadJSON('data/requests.json', SAMPLE)
+            const page = useColumns(valid(loaded) ? loaded : SAMPLE, SAMPLE.columns, 'status')
+            // Stages and types describe the page, so edits to them show; the requests are the learner's.
+            state = { ...page, types: [...SAMPLE.types], items: withDates(page.items) }
+            document.getElementById('f-type').replaceChildren(...state.types.map(type => el('option', {}, type)))
+            document.getElementById('f-due').value = isoDay(7)
+            render()
+        }
+        start()
+    </script>
+</body>
+</html>

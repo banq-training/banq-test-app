@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .steam { fill: none; stroke: #c9b8ad; stroke-width: 3; stroke-linecap: round; opacity: 0; animation: rise 2.4s ease-in-out infinite; }
+    .s2 { animation-delay: 0.8s; } .s3 { animation-delay: 1.6s; }
+    @keyframes rise { 0% { transform: translateY(6px); opacity: 0; } 40% { opacity: 0.9; } 100% { transform: translateY(-6px); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .steam { animation: none; opacity: 0.8; } }
+  </style>
+  <path class="steam" d="M24 22c-3-4 3-6 0-10"/>
+  <path class="steam s2" d="M32 22c-3-4 3-6 0-10"/>
+  <path class="steam s3" d="M40 22c-3-4 3-6 0-10"/>
+  <path d="M50 32h3a6 6 0 0 1 0 12h-4" fill="none" stroke="#e07a5f" stroke-width="4"/>
+  <path d="M14 28h36v10a16 16 0 0 1-16 16h-4a16 16 0 0 1-16-16z" fill="#e07a5f"/>
+  <ellipse cx="32" cy="28" rx="18" ry="3" fill="#8d5a44"/>
+  <rect x="10" y="55" width="44" height="4" rx="2" fill="#f2cc8f"/>
+</svg>

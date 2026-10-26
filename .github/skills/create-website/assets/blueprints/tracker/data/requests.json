@@ -1,0 +1,11 @@
+{
+  "columns": ["New", "In review", "Approved", "Done"],
+  "types": ["Report", "Automation", "Process", "Website"],
+  "items": [
+    { "id": "r1", "title": "Refresh the monthly sales report", "type": "Report", "priority": "High", "owner": "Sam", "status": "In review", "dueInDays": 3 },
+    { "id": "r2", "title": "Automate the weekly status email", "type": "Automation", "priority": "Medium", "owner": "Priya", "status": "New", "dueInDays": 7 },
+    { "id": "r3", "title": "Write the vendor onboarding checklist", "type": "Process", "priority": "High", "owner": "Jordan", "status": "New", "dueInDays": -2 },
+    { "id": "r4", "title": "Training completion overview", "type": "Report", "priority": "Low", "owner": "Alex", "status": "Approved", "dueInDays": 10 },
+    { "id": "r5", "title": "Team contacts page", "type": "Website", "priority": "Low", "owner": "Morgan", "status": "Done", "dueInDays": -5 }
+  ]
+}

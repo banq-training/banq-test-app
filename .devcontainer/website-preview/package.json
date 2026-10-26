@@ -1,0 +1,35 @@
+{
+  "name": "workshop-site-preview",
+  "displayName": "Workshop Website Preview",
+  "description": "Show the workshop website beside Chat and redraw it on every change, without a server.",
+  "version": "0.6.3",
+  "publisher": "workshop-local",
+  "private": true,
+  "engines": { "vscode": "^1.99.0" },
+  "extensionKind": ["workspace"],
+  "main": "./extension.cjs",
+  "files": ["extension.cjs", "controller.cjs", "assistant.cjs", "photo.cjs"],
+  "activationEvents": ["onStartupFinished", "onWebviewPanel:workshopSite"],
+  "capabilities": {
+    "untrustedWorkspaces": { "supported": false },
+    "virtualWorkspaces": false
+  },
+  "contributes": {
+    "commands": [
+      { "command": "workshopSite.open", "title": "Workshop Website: Open Preview", "icon": "$(open-preview)" },
+      { "command": "workshopSite.close", "title": "Workshop Website: Close Preview" }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "workshopSite.open",
+          "when": "resourceExtname == .html && resourcePath =~ /\\/site\\//",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "@vscode/vsce": "4.0.0"
+  }
+}

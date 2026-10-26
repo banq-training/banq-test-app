@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "id": "i1", "text": "A shared team calendar" },
+    { "id": "i2", "text": "Friday lunch-and-learn" },
+    { "id": "i3", "text": "A quiet room for focus time" }
+  ]
+}

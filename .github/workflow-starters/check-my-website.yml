@@ -1,0 +1,119 @@
+name: Check my website
+
+# Day 5 starter: checks that run on every change (continuous integration). "Check the website"
+# runs the build check and your tests; "UI check" opens your pages in a browser on a desktop and a
+# phone, and keeps the screenshots with the run.
+# Copy it to .github/workflows/check-my-website.yml, then make two edits:
+#   1. Triggers: under "on:", add pull_request and a push to main, so every change is checked.
+#   2. Permissions: this check only reads your files. Change "write" to "read" below.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    name: Check the website
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Get my files
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install the workshop tools
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.7"
+
+      - name: Prepare the test tools
+        run: uv sync --locked --extra dev --extra web
+
+      - name: Build check (the same check publishing runs)
+        run: uv run python -m app.site --check
+
+      - name: Run my tests
+        run: |
+          if ! ls checks/test_*.py > /dev/null 2>&1; then
+            echo "::notice::No tests in checks/ yet. Write one on Day 3, then push again."
+            exit 0
+          fi
+          uv run pytest checks
+
+  ui:
+    name: UI check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Get my files
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install the workshop tools
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.7"
+
+      - name: Prepare the website server
+        run: uv sync --locked --extra dev --extra web
+
+      # GitHub's Ubuntu machine already has everything a browser needs, so this downloads only the
+      # browser itself, in seconds. (Adding --with-deps reinstalls those parts from Ubuntu's
+      # servers, which took up to 14 minutes on 22 October 2026.)
+      - name: Install a browser
+        run: uv run --with playwright==1.64.0 playwright install chromium
+
+      # Ubuntu 24.04 blocks what Chromium's sandbox needs. This runner is thrown away after the
+      # job, so allow it here instead of ever switching the browser's sandbox off.
+      - name: Let the browser keep its sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Open my pages on a desktop and a phone
+        run: |
+          uv run uvicorn app.site:app --host 127.0.0.1 --port 8000 > website.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            curl --silent --output /dev/null http://127.0.0.1:8000/ && break
+            sleep 1
+          done
+          uv run --with playwright==1.64.0 python scripts/ui_check.py http://127.0.0.1:8000 --out ui-check
+
+      # Single pictures, not zipped, so they open straight from the run's Artifacts list.
+      - name: Keep the desktop screenshot
+        if: ${{ always() && hashFiles('ui-check/home-desktop.png') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          path: ui-check/home-desktop.png
+          archive: false
+          overwrite: true
+          retention-days: 7
+
+      - name: Keep the phone screenshot
+        if: ${{ always() && hashFiles('ui-check/home-phone.png') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          path: ui-check/home-phone.png
+          archive: false
+          overwrite: true
+          retention-days: 7
+
+      - name: Keep every screenshot, idea pages too
+        if: ${{ always() && hashFiles('ui-check/*.png') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: all-screenshots
+          path: ui-check/
+          overwrite: true
+          retention-days: 7

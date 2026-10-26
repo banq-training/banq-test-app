@@ -1,0 +1,9 @@
+{
+  "columns": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+  "items": [
+    { "id": "t1", "text": "Write the project brief", "column": "Monday", "done": true },
+    { "id": "t2", "text": "Sketch the first design", "column": "Tuesday", "done": false },
+    { "id": "t3", "text": "Ask the team for feedback", "column": "Wednesday", "done": false },
+    { "id": "t4", "text": "Share the finished plan", "column": "Friday", "done": false }
+  ]
+}

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Ideas Wall</title>
+    <link rel="stylesheet" href="css/workshop.css">
+    <style>
+        .note .card-text { font-size: 1.05rem; }
+        .note-add .add, .note-add .add-form { width: 100%; display: grid; place-items: center; }
+    </style>
+</head>
+<body data-theme="green">
+    <header class="app-header">
+        <div class="container hero">
+            <div>
+                <p class="logo"><span class="logo-mark" aria-hidden="true">M</span>My Ideas Wall</p>
+                <h1>Every good idea, in one place</h1>
+                <p>Press + to pin an idea, drag notes to put the best ones first, and remove what you don't need.</p>
+            </div>
+            <img class="hero-art" src="art/hero-ideas.svg" alt="">
+        </div>
+    </header>
+
+    <main class="container main">
+        <section class="panel toolbar animate-in">
+            <strong id="count"></strong>
+        </section>
+        <div class="wall" id="wall" data-column="wall"></div>
+    </main>
+
+    <footer class="page-footer">Your ideas are remembered in this browser.</footer>
+
+    <script src="js/workshop.js"></script>
+    <script>
+        const { el, store, loadJSON, addButton, enableBoard, toast, flash, newId } = window.Workshop
+        const SAMPLE = {
+            items: [
+                { id: 'i1', text: 'A shared team calendar' },
+                { id: 'i2', text: 'Friday lunch-and-learn' },
+                { id: 'i3', text: 'A quiet room for focus time' },
+            ],
+        }
+        const COLORS = ['var(--note-1)', 'var(--note-2)', 'var(--note-3)', 'var(--note-4)']
+        const TILTS = ['-1.5deg', '1deg', '-0.5deg', '1.5deg']
+        const saved = store('ideas-wall')
+        let state = SAMPLE
+        // An empty wall means there is nothing of the learner's left to keep, so the
+        // examples load themselves again rather than leaving a blank page.
+        const valid = data => data && Array.isArray(data.items) && data.items.length > 0
+
+        function update(message, changedId) {
+            saved.save(state)
+            render()
+            if (message) toast(message)
+            if (changedId) flash(document.querySelector(`[data-card-id="${changedId}"]`))
+        }
+
+        function render() {
+            document.getElementById('count').textContent = `${state.items.length} ideas`
+            const notes = state.items.map((item, index) => el('article', {
+                className: 'note', draggable: 'true', 'data-card-id': item.id,
+                style: `--note: ${COLORS[index % COLORS.length]}; --tilt: ${TILTS[index % TILTS.length]}`,
+            },
+                el('span', { className: 'card-text' }, item.text),
+                el('button', {
+                    type: 'button', className: 'remove', 'aria-label': `Remove ${item.text}`,
+                    onClick: () => { state.items = state.items.filter(entry => entry.id !== item.id); update('Removed') },
+                }, '\u00d7')))
+            const adder = el('div', { className: 'note-add' }, addButton('Add an idea', text => {
+                const item = { id: newId(), text }
+                state.items.push(item)
+                update('Idea added', item.id)
+            }))
+            document.getElementById('wall').replaceChildren(...notes, adder)
+        }
+
+        enableBoard(document.getElementById('wall').parentElement, (id, _column, beforeId) => {
+            const item = state.items.find(entry => entry.id === id)
+            if (!item) return
+            state.items = state.items.filter(entry => entry.id !== id)
+            const index = beforeId ? state.items.findIndex(entry => entry.id === beforeId) : -1
+            if (index === -1) state.items.push(item)
+            else state.items.splice(index, 0, item)
+            update('Moved', id)
+        })
+
+        async function start() {
+            const remembered = saved.load(null)
+            const loaded = valid(remembered) ? remembered : await loadJSON('data/ideas.json', SAMPLE)
+            state = valid(loaded) ? loaded : SAMPLE
+            render()
+        }
+        start()
+    </script>
+</body>
+</html>

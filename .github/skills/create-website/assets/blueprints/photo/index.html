@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Photo Studio</title>
+    <link rel="stylesheet" href="css/workshop.css">
+    <style>
+        .studio { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 1.4rem; align-items: start; }
+        .step { display: grid; gap: 0.7rem; }
+        .step + .step { margin-top: 1.2rem; }
+        .step h2 { display: flex; align-items: center; gap: 0.5rem; }
+        .step-number { display: inline-grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--accent); color: #fff; font-size: 0.95rem; }
+        .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 0.5rem; }
+        .thumb { aspect-ratio: 1; padding: 0; border: 3px solid transparent; border-radius: 12px; overflow: hidden; background: var(--line); cursor: pointer; }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .thumb[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .upload { display: inline-flex; align-items: center; gap: 0.4rem; justify-self: start; }
+        .upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .upload:focus-within { outline: 3px solid var(--focus); outline-offset: 3px; }
+        .styles { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+        .style-chip { border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 99px; padding: 0.4rem 0.85rem; font-weight: 650; cursor: pointer; }
+        .style-chip[aria-pressed="true"] { background: linear-gradient(135deg, var(--accent), var(--second)); border-color: transparent; color: #fff; }
+        .own { width: 100%; padding: 0.55rem 0.85rem; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink); }
+        .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+        .make { border: 0; border-radius: 99px; padding: 0.75rem 1.4rem; background: linear-gradient(135deg, var(--accent), var(--second)); color: #fff; font-weight: 750; font-size: 1.05rem; cursor: pointer; box-shadow: var(--shadow-lift); }
+        .make:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+        .stage { position: relative; aspect-ratio: 1; border-radius: var(--radius); overflow: hidden; background: #10232b; box-shadow: var(--shadow-lift); }
+        .stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+        .stage .after { clip-path: inset(0 0 0 var(--cut, 50%)); }
+        .stage .divider { position: absolute; top: 0; bottom: 0; left: var(--cut, 50%); width: 3px; margin-left: -1.5px; background: #fff; box-shadow: 0 0 10px rgb(0 0 0 / 45%); pointer-events: none; }
+        .stage .slider { position: absolute; left: 8%; right: 8%; bottom: 0.9rem; width: 84%; accent-color: #fff; }
+        .stage .tag { position: absolute; top: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 99px; background: rgb(0 0 0 / 55%); color: #fff; font-size: 0.8rem; font-weight: 700; }
+        .stage .tag.before { left: 0.7rem; }
+        .stage .tag.after-tag { right: 0.7rem; }
+        .stage .empty-stage { position: absolute; inset: 0; display: grid; place-items: center; padding: 1.5rem; color: #cfe3ea; text-align: center; }
+        .stage.is-working::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 25%, rgb(255 255 255 / 28%) 50%, transparent 75%); background-size: 250% 100%; animation: shimmer 1.4s linear infinite; }
+        @keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+        @media (prefers-reduced-motion: reduce) { .stage.is-working::after { animation: none; } }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.9rem; }
+        .picture { margin: 0; border-radius: var(--radius); overflow: hidden; background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
+        .picture button { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+        .picture img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform 300ms ease; }
+        .picture:hover img { transform: scale(1.04); }
+        .picture figcaption { padding: 0.5rem 0.7rem; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        @media (max-width: 760px) { .studio { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body data-theme="green">
+    <header class="app-header">
+        <div class="container hero">
+            <div>
+                <p class="logo"><span class="logo-mark" aria-hidden="true">M</span>My Photo Studio</p>
+                <h1>Make any photo magical</h1>
+                <p>Pick a photo, choose a style, and the workshop AI repaints it. Photos of things, places and pets only.</p>
+            </div>
+            <img class="hero-art" src="art/hero-photo.svg" alt="">
+        </div>
+    </header>
+
+    <main class="container main">
+        <section class="panel animate-in studio">
+            <div>
+                <div class="step">
+                    <h2><span class="step-number">1</span>Pick a photo</h2>
+                    <div class="thumbs" id="thumbs" role="group" aria-label="Sample photos"></div>
+                    <label class="ghost upload">Use my own photo<input type="file" id="upload" accept="image/jpeg,image/png,image/webp"></label>
+                </div>
+                <div class="step">
+                    <h2><span class="step-number">2</span>Pick a style</h2>
+                    <div class="styles" id="styles" role="group" aria-label="Styles"></div>
+                    <input class="own" id="own" maxlength="200" placeholder="Or describe your own change, like 'make it autumn'" aria-label="Your own change">
+                </div>
+                <div class="step">
+                    <div class="actions">
+                        <button type="button" class="make" id="make">Make it</button>
+                        <button type="button" class="ghost" id="save" hidden>Save to gallery</button>
+                    </div>
+                    <p class="notice" id="status" role="status" hidden></p>
+                </div>
+            </div>
+            <div class="stage" id="stage" aria-live="polite"></div>
+        </section>
+
+        <section class="panel animate-in" style="--i: 1">
+            <div class="toolbar">
+                <h2>Gallery</h2>
+                <strong id="count"></strong>
+            </div>
+            <div class="gallery" id="gallery"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Pictures are made by the workshop AI and saved as files in this website. Everything stays fictional.</footer>
+
+    <script src="js/workshop.js"></script>
+    <script src="js/workshop-photo.js"></script>
+    <script>
+        const { el, store, loadJSON, toast, flash, photo } = window.Workshop
+        const SAMPLE = {
+            items: [
+                { file: 'gallery/morning-mug.jpg', title: 'Morning mug' },
+                { file: 'gallery/sleepy-cat.jpg', title: 'Sleepy cat' },
+                { file: 'gallery/blue-bicycle.jpg', title: 'Blue bicycle' },
+                { file: 'gallery/misty-lake.jpg', title: 'Misty lake' },
+                { file: 'gallery/fruit-bowl.jpg', title: 'Fruit bowl' },
+                { file: 'gallery/happy-puppy.jpg', title: 'Happy puppy' },
+            ],
+        }
+        const STYLES = [
+            { name: 'Watercolor', prompt: 'Turn this photo into a soft watercolor painting with gentle paper texture.' },
+            { name: 'Comic book', prompt: 'Turn this photo into a bold comic book illustration with clean ink lines and halftone dots.' },
+            { name: 'Pixel art', prompt: 'Turn this photo into colorful 16-bit pixel art.' },
+            { name: 'Starry night', prompt: 'Repaint this photo as a swirling post-impressionist oil painting under a starry night sky.' },
+            { name: 'Neon night', prompt: 'Make this photo a glowing neon night scene with vivid pink and blue light.' },
+            { name: 'Snowy winter', prompt: 'Make this a snowy winter scene with soft falling snow.' },
+            { name: 'Clay model', prompt: 'Turn this photo into a cute clay stop-motion model scene.' },
+            { name: 'Golden hour', prompt: 'Bathe this photo in warm golden-hour sunset light.' },
+        ]
+        const saved = store('photo-studio')
+        let gallery = SAMPLE
+        let choice = saved.load({ style: 'Watercolor' })
+        let source = null
+        let sourceName = ''
+        let result = null
+        let working = false
+        const valid = data => data && Array.isArray(data.items) && data.items.length > 0
+
+        function say(text) {
+            const status = document.getElementById('status')
+            status.hidden = !text
+            status.textContent = text || ''
+        }
+
+        function renderStage() {
+            const stage = document.getElementById('stage')
+            stage.classList.toggle('is-working', working)
+            if (!source) {
+                stage.replaceChildren(el('p', { className: 'empty-stage' }, 'Pick a photo to start.'))
+                return
+            }
+            if (!result) {
+                stage.replaceChildren(el('img', { src: source, alt: `Your photo: ${sourceName}` }))
+                return
+            }
+            const after = el('img', { className: 'after', src: result, alt: `${choice.style} version of ${sourceName}` })
+            const slider = el('input', { type: 'range', className: 'slider', min: '0', max: '100', value: '50', 'aria-label': 'Compare before and after' })
+            slider.addEventListener('input', () => stage.style.setProperty('--cut', `${slider.value}%`))
+            stage.style.setProperty('--cut', '50%')
+            stage.replaceChildren(el('img', { src: source, alt: `Before: ${sourceName}` }), after, el('span', { className: 'divider' }),
+                el('span', { className: 'tag before' }, 'Before'), el('span', { className: 'tag after-tag' }, choice.style), slider)
+        }
+
+        function renderControls() {
+            document.getElementById('styles').replaceChildren(...STYLES.map(style => el('button', {
+                type: 'button', className: 'style-chip', 'aria-pressed': String(choice.style === style.name),
+                onClick: () => { choice = { ...choice, style: style.name }; document.getElementById('own').value = ''; saved.save(choice); renderControls() },
+            }, style.name)))
+            const make = document.getElementById('make')
+            make.disabled = working || !source || !photo.available()
+            make.textContent = working ? 'Painting\u2026' : 'Make it'
+            document.getElementById('save').hidden = !result || working
+            if (!photo.available()) say('Making pictures works while you build in the workshop preview. This copy shows the gallery only.')
+        }
+
+        async function pick(file, title, button) {
+            try {
+                source = file instanceof Blob ? await photo.shrink(file) : await photo.fromUrl(file)
+                sourceName = title
+                result = null
+                say('')
+                document.querySelectorAll('.thumb').forEach(thumb => thumb.setAttribute('aria-pressed', String(thumb === button)))
+                renderStage()
+                renderControls()
+            } catch (error) {
+                say(error.message)
+            }
+        }
+
+        function renderGallery() {
+            document.getElementById('count').textContent = `${gallery.items.length} pictures`
+            document.getElementById('thumbs').replaceChildren(...SAMPLE.items.map(item => {
+                const button = el('button', { type: 'button', className: 'thumb', 'aria-pressed': 'false', 'aria-label': `Use ${item.title}` },
+                    el('img', { src: item.file, alt: '' }))
+                button.addEventListener('click', () => pick(item.file, item.title, button))
+                return button
+            }))
+            document.getElementById('gallery').replaceChildren(...gallery.items.map((item, index) => el('figure', {
+                className: 'picture animate-in', style: `--i: ${Math.min(index, 12)}`,
+            },
+                el('button', { type: 'button', 'aria-label': `Edit ${item.title}`, onClick: () => { pick(item.file, item.title, null); document.getElementById('stage').scrollIntoView({ behavior: 'smooth', block: 'center' }) } },
+                    el('img', { src: item.file, alt: item.title, loading: 'lazy' })),
+                el('figcaption', {}, item.title))))
+        }
+
+        document.getElementById('upload').addEventListener('change', event => {
+            const file = event.target.files[0]
+            if (file) pick(file, file.name.replace(/\.[^.]+$/, '').slice(0, 40) || 'my photo', null)
+            event.target.value = ''
+        })
+
+        document.getElementById('make').addEventListener('click', async () => {
+            const own = document.getElementById('own').value.trim()
+            const style = STYLES.find(entry => entry.name === choice.style) || STYLES[0]
+            if (own) choice = { ...choice, style: own.length > 24 ? `${own.slice(0, 22)}\u2026` : own }
+            working = true
+            result = null
+            say('Checking the photo, then painting. This takes about 20 seconds.')
+            renderStage()
+            renderControls()
+            const reply = await photo.edit(source, own || style.prompt)
+            working = false
+            if (reply.ok) {
+                result = reply.image
+                say('')
+                toast('Your picture is ready: drag the slider to compare')
+            } else {
+                say(reply.error || 'That did not work this time. Please try again.')
+            }
+            renderStage()
+            renderControls()
+            flash(document.getElementById('stage'))
+        })
+
+        document.getElementById('save').addEventListener('click', async () => {
+            const title = `${choice.style} ${sourceName}`.slice(0, 60)
+            const reply = await photo.save(result, title)
+            if (reply.ok) toast('Saved to the gallery')
+            else say(reply.error || 'The picture could not be saved.')
+        })
+
+        document.getElementById('own').addEventListener('input', event => {
+            if (event.target.value.trim()) document.querySelectorAll('.style-chip').forEach(chip => chip.setAttribute('aria-pressed', 'false'))
+        })
+
+        async function start() {
+            const loaded = await loadJSON('data/gallery.json', SAMPLE)
+            gallery = valid(loaded) ? loaded : SAMPLE
+            renderGallery()
+            renderControls()
+            renderStage()
+        }
+        start()
+    </script>
+</body>
+</html>

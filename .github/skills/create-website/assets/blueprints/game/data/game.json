@@ -1,0 +1,47 @@
+{
+  "maze": [
+    "###################",
+    "#o.......#.......o#",
+    "#.##.###.#.###.##.#",
+    "#.......M.........#",
+    "#.##.#.#####.#.##.#",
+    "#....#...#...#....#",
+    "#.##.###.#.###.##.#",
+    "#......#III#......#",
+    "#.##.#.#####.#.##.#",
+    "#....#...M...#....#",
+    "#.##.###.#.###.##.#",
+    "#..#.....S.....#..#",
+    "#..#.#.#####.#.#..#",
+    "#o...#.......#...o#",
+    "###################"
+  ],
+  "lines": {
+    "start": ["Escaped molecules spotted in the lab! Go get them."],
+    "molecule": [
+      "Got one! It was hiding behind the centrifuge.",
+      "Caught! It tried to bond with the coffee machine.",
+      "Back in the beaker you go!",
+      "Caught! Peer review would be proud."
+    ],
+    "caught": [
+      "Caught by a quick 5-minute sync. It took an hour.",
+      "Pulled into a meeting that could have been an email.",
+      "Accepted: weekly status update, recurring forever.",
+      "Invited to a budget review at 4:45 on a Friday."
+    ],
+    "coffee": ["Coffee! Now you can decline those invites."],
+    "declined": [
+      "Declined! Can we circle back? No.",
+      "Declined! An hour of your life saved.",
+      "Declined politely. Calendar freed."
+    ],
+    "level": ["Experiment complete! The results look statistically significant."],
+    "over": ["Out of lives. Time for a coffee break."]
+  },
+  "items": [
+    { "id": "s1", "name": "Dr. Ada", "score": 4200 },
+    { "id": "s2", "name": "Prof. Lin", "score": 3100 },
+    { "id": "s3", "name": "Sam the intern", "score": 950 }
+  ]
+}

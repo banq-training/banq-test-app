@@ -1,0 +1,56 @@
+{
+  "name": "Copilot Hackathon",
+  "image": "ghcr.io/agentic-dev-labs/copilot-hackathon-codespace:latest",
+  "remoteUser": "vscode",
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb",
+    "storage": "32gb"
+  },
+  "onCreateCommand": {
+    "uv": "bash -o pipefail -c 'if ! command -v uv >/dev/null; then curl -LsSf https://astral.sh/uv/0.9.7/install.sh | sh; fi'"
+  },
+  "updateContentCommand": "bash .devcontainer/setup.sh",
+  "postCreateCommand": "bash -o pipefail .devcontainer/setup.sh cli",
+  "postAttachCommand": {
+    "website-preview": "bash .devcontainer/setup.sh preview"
+  },
+  "waitFor": "updateContentCommand",
+  "remoteEnv": {
+    "UV_NATIVE_TLS": "true",
+    "VIRTUAL_ENV": "${containerWorkspaceFolder}/.venv",
+    "PATH": "${containerWorkspaceFolder}/.venv/bin:/home/vscode/.local/bin:${containerEnv:PATH}"
+  },
+  "forwardPorts": [
+    8000
+  ],
+  "portsAttributes": {
+    "8000": {
+      "label": "Private preview server (presenter and deployment checks)",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "GitHub.vscode-pull-request-github",
+        "GitHub.vscode-github-actions",
+        "ms-python.python",
+        "ms-python.vscode-python-envs",
+        "ms-python.debugpy",
+        "redhat.vscode-yaml"
+      ],
+      "settings": {
+        "github.copilot.chat.organizationCustomAgents.enabled": false,
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": [
+          "tests"
+        ],
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}

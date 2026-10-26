@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "bash",
+      "args": ["${workspaceFolder}/.devcontainer/mcp.sh", "playwright"]
+    },
+    "markitdown": {
+      "type": "stdio",
+      "command": "bash",
+      "args": ["${workspaceFolder}/.devcontainer/mcp.sh", "markitdown"]
+    }
+  }
+}

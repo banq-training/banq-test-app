@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Project Planner</title>
+    <link rel="stylesheet" href="css/workshop.css">
+    <style>
+        .summary { display: flex; align-items: center; gap: 1.1rem; width: 100%; }
+        .summary-text { flex: 1; display: grid; gap: 0.5rem; }
+        .summary .progress { height: 12px; }
+        .ring { --value: 0; flex: none; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: conic-gradient(var(--accent) calc(var(--value) * 1%), var(--accent-soft) 0); transition: background 400ms ease; }
+        .ring span { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--paper); font-size: 0.9rem; font-weight: 800; color: var(--accent-strong); }
+    </style>
+</head>
+<body data-theme="green">
+    <header class="app-header">
+        <div class="container hero">
+            <div>
+                <p class="logo"><span class="logo-mark" aria-hidden="true">M</span>My Project Planner</p>
+                <h1>Plan the week, one card at a time</h1>
+                <p>Press + to add a task, drag it to another day, and tick it when it's done.</p>
+            </div>
+            <img class="hero-art" src="art/hero-project.svg" alt="">
+        </div>
+    </header>
+
+    <main class="container main">
+        <section class="panel toolbar animate-in" aria-label="Progress">
+            <div class="summary">
+                <div class="ring" id="done-ring" aria-hidden="true"><span id="done-percent">0%</span></div>
+                <div class="summary-text">
+                    <strong id="done-text"></strong>
+                    <div class="progress" aria-hidden="true"><span id="done-bar"></span></div>
+                </div>
+            </div>
+        </section>
+        <div class="board" id="board"></div>
+    </main>
+
+    <footer class="page-footer">Your tasks are remembered in this browser.</footer>
+
+    <script src="js/workshop.js"></script>
+    <script>
+        const { el, store, loadJSON, useColumns, addButton, enableBoard, toast, flash, newId } = window.Workshop
+        const SAMPLE = {
+            columns: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+            items: [
+                { id: 't1', text: 'Write the project brief', column: 'Monday', done: true },
+                { id: 't2', text: 'Sketch the first design', column: 'Tuesday', done: false },
+                { id: 't3', text: 'Ask the team for feedback', column: 'Wednesday', done: false },
+                { id: 't4', text: 'Share the finished plan', column: 'Friday', done: false },
+            ],
+        }
+        const saved = store('project-planner')
+        let state = SAMPLE
+        // An empty board means there is nothing of the learner's left to keep, so the
+        // examples load themselves again rather than leaving a blank page.
+        const valid = data => data && Array.isArray(data.columns) && Array.isArray(data.items)
+            && data.items.length > 0
+
+        function update(message, changedId) {
+            saved.save(state)
+            render()
+            if (message) toast(message)
+            if (changedId) flash(document.querySelector(`[data-card-id="${changedId}"]`))
+        }
+
+        function move(id, column, beforeId) {
+            const item = state.items.find(entry => entry.id === id)
+            if (!item) return
+            state.items = state.items.filter(entry => entry.id !== id)
+            item.column = column
+            const index = beforeId ? state.items.findIndex(entry => entry.id === beforeId) : -1
+            if (index === -1) state.items.push(item)
+            else state.items.splice(index, 0, item)
+            update(`Moved to ${column}`, id)
+        }
+
+        function card(item, index) {
+            return el('article', {
+                className: `card animate-in${item.done ? ' is-done' : ''}`,
+                style: `--i: ${index}`, draggable: 'true', 'data-card-id': item.id,
+            },
+                el('input', {
+                    type: 'checkbox', checked: item.done, 'aria-label': `Done: ${item.text}`,
+                    onChange: event => { item.done = event.target.checked; update(item.done ? 'Nice work!' : 'Reopened', item.id) },
+                }),
+                el('span', { className: 'card-text' }, item.text),
+                el('button', {
+                    type: 'button', className: 'remove', 'aria-label': `Remove ${item.text}`,
+                    onClick: () => { state.items = state.items.filter(entry => entry.id !== item.id); update('Removed') },
+                }, '\u00d7'))
+        }
+
+        // The kit ships one icon per weekday, so only those column names ask for a picture.
+        // A column called "In Progress" simply shows its name instead of requesting a missing file.
+        const DAY_ART = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        const columnArt = column => DAY_ART.includes(column.toLowerCase())
+            ? el('img', { className: 'day-art', src: Workshop.asset(`art/${column.toLowerCase()}.svg`), alt: '' })
+            : null
+
+        function render() {
+            const done = state.items.filter(item => item.done).length
+            const total = state.items.length
+            const percent = total ? Math.round((done / total) * 100) : 0
+            document.getElementById('done-text').textContent = `${done} of ${total} done`
+            document.getElementById('done-bar').style.setProperty('--value', percent)
+            document.getElementById('done-ring').style.setProperty('--value', percent)
+            document.getElementById('done-percent').textContent = `${percent}%`
+            document.getElementById('board').replaceChildren(...state.columns.map(column => {
+                const items = state.items.filter(item => item.column === column)
+                return el('section', { className: 'column', 'data-column': column, 'aria-label': column },
+                    el('div', { className: 'column-title' },
+                        el('span', { className: 'row', style: 'gap: 0' },
+                            columnArt(column),
+                            column),
+                        el('span', { className: 'count' }, String(items.length))),
+                    items.map(card),
+                    addButton(`Add a task on ${column}`, text => {
+                        const item = { id: newId(), text, column, done: false }
+                        state.items.push(item)
+                        update('Task added', item.id)
+                    }))
+            }))
+        }
+
+        enableBoard(document.getElementById('board'), move)
+
+        async function start() {
+            const remembered = saved.load(null)
+            const loaded = valid(remembered) ? remembered : await loadJSON('data/tasks.json', SAMPLE)
+            state = useColumns(valid(loaded) ? loaded : SAMPLE, SAMPLE.columns)
+            render()
+        }
+        start()
+    </script>
+</body>
+</html>

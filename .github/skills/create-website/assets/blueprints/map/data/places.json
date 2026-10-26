@@ -1,0 +1,166 @@
+{
+  "items": [
+    {
+      "id": "nassau-hall",
+      "name": "Nassau Hall",
+      "category": "Campus",
+      "lat": 40.34874,
+      "lon": -74.65935,
+      "description": "Princeton's oldest building, which served as the nation's capital in 1783.",
+      "source": "http://tigernet.princeton.edu/~ptoniana/nassauhall.asp"
+    },
+    {
+      "id": "princeton-university-chapel",
+      "name": "Princeton University Chapel",
+      "category": "Campus",
+      "lat": 40.34889,
+      "lon": -74.65689,
+      "description": "Completed in 1928; the University opens and closes each academic year with a service here.",
+      "source": "https://chapel.princeton.edu/"
+    },
+    {
+      "id": "princeton-university-art-museum",
+      "name": "Princeton University Art Museum",
+      "category": "Arts",
+      "lat": 40.34719,
+      "lon": -74.65803,
+      "description": "The museum's bold new building opened to the public on October 31, 2025.",
+      "source": "https://artmuseum.princeton.edu/about/new-museum"
+    },
+    {
+      "id": "mccarter-theatre-center",
+      "name": "McCarter Theatre Center",
+      "category": "Arts",
+      "lat": 40.34431,
+      "lon": -74.6607,
+      "description": "Thornton Wilder's play Our Town had its premiere on McCarter's stage.",
+      "source": "https://www.mccarter.org/about-us"
+    },
+    {
+      "id": "palmer-square",
+      "name": "Palmer Square",
+      "category": "Town",
+      "lat": 40.35011,
+      "lon": -74.66153,
+      "description": "Edgar Palmer announced this new town center for Princeton in February 1929.",
+      "source": "https://web.archive.org/web/20111124075903/http://princetonhistory.org/collections/historic-sites.cfm"
+    },
+    {
+      "id": "princeton-public-library",
+      "name": "Princeton Public Library",
+      "category": "Town",
+      "lat": 40.35173,
+      "lon": -74.66033,
+      "description": "The Sands Library Building opened in 2004 and was hailed as a modern library.",
+      "source": "https://princetonlibrary.org/about-us/library-spaces/"
+    },
+    {
+      "id": "morven-museum-garden",
+      "name": "Morven Museum & Garden",
+      "category": "History",
+      "lat": 40.34749,
+      "lon": -74.66695,
+      "description": "Built in the 1750s by Richard Stockton, a signer of the Declaration of Independence.",
+      "source": "https://www.morven.org/about"
+    },
+    {
+      "id": "princeton-battlefield-state-park",
+      "name": "Princeton Battlefield",
+      "category": "History",
+      "lat": 40.33083,
+      "lon": -74.67556,
+      "description": "Site of the January 3, 1777 battle, called the fiercest fight of its size in the Revolution.",
+      "source": "https://web.archive.org/web/20181215230330/https://www.state.nj.us/dep/parksandforests/parks/princeton.html"
+    },
+    {
+      "id": "princeton-battle-monument",
+      "name": "Princeton Battle Monument",
+      "category": "History",
+      "lat": 40.34781,
+      "lon": -74.66586,
+      "description": "Commissioned in 1908 and dedicated in 1922, with President Harding in attendance.",
+      "source": "https://web.archive.org/web/20111124075903/http://princetonhistory.org/collections/historic-sites.cfm"
+    },
+    {
+      "id": "drumthwacket",
+      "name": "Drumthwacket",
+      "category": "History",
+      "lat": 40.33917,
+      "lon": -74.67472,
+      "description": "The official residence of New Jersey's governor, on land where the 1777 battle was fought.",
+      "source": "https://drumthwacket.org/"
+    },
+    {
+      "id": "princeton-cemetery",
+      "name": "Princeton Cemetery",
+      "category": "History",
+      "lat": 40.355,
+      "lon": -74.66,
+      "description": "Established in 1757 and still run by Nassau Presbyterian Church, near the center of town.",
+      "source": "https://nassauchurch.org/about/princetoncemetery/"
+    },
+    {
+      "id": "updike-farmstead",
+      "name": "Updike Farmstead",
+      "category": "History",
+      "lat": 40.32462,
+      "lon": -74.67996,
+      "description": "A six-acre farmstead bought by the Historical Society of Princeton in 2004.",
+      "source": "https://princetonhistory.org/visit/updike-farmstead/"
+    },
+    {
+      "id": "lake-carnegie",
+      "name": "Lake Carnegie",
+      "category": "Nature",
+      "lat": 40.33938,
+      "lon": -74.65075,
+      "description": "A 3.5-mile lake made in 1906 when a dam at Kingston held back the Millstone River.",
+      "source": "http://tigernet.princeton.edu/~ptoniana/carnegie.asp"
+    },
+    {
+      "id": "institute-woods",
+      "name": "Institute Woods",
+      "category": "Nature",
+      "lat": 40.32425,
+      "lon": -74.68879,
+      "description": "589 acres of woods, wetlands and farmland, gathered by the Institute for Advanced Study from 1936.",
+      "source": "https://www.ias.edu/institute-woods"
+    },
+    {
+      "id": "marquand-park",
+      "name": "Marquand Park",
+      "category": "Nature",
+      "lat": 40.3415,
+      "lon": -74.67114,
+      "description": "Over 140 kinds of trees, including a Dawn Redwood once known only from fossils.",
+      "source": "https://www.marquandpark.org/about"
+    },
+    {
+      "id": "herrontown-woods",
+      "name": "Herrontown Woods",
+      "category": "Nature",
+      "lat": 40.37978,
+      "lon": -74.64377,
+      "description": "Woods whose Veblen House was given to Mercer County in 1974 to become a nature museum.",
+      "source": "https://www.herrontownwoods.org/"
+    },
+    {
+      "id": "mountain-lakes-preserve",
+      "name": "Mountain Lakes Preserve",
+      "category": "Nature",
+      "lat": 40.36322,
+      "lon": -74.67605,
+      "description": "Friends of Princeton Open Space is planting over 6,500 native trees, shrubs and wildflowers here.",
+      "source": "https://www.fopos.org/"
+    },
+    {
+      "id": "dr-canal-towpath",
+      "name": "D&R Canal Towpath",
+      "category": "Nature",
+      "lat": 40.33136,
+      "lon": -74.65365,
+      "description": "The towpath of the Delaware and Raritan Canal, chartered by New Jersey in 1830.",
+      "source": "https://dandrcanal.org/history"
+    }
+  ]
+}

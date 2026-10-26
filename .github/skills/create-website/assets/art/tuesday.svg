@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .rocket { animation: bob 2.2s ease-in-out infinite; }
+    .flame { transform-origin: 32px 46px; animation: flicker 0.25s ease-in-out infinite alternate; }
+    @keyframes bob { 50% { transform: translateY(-3px); } }
+    @keyframes flicker { to { transform: scaleY(0.65); } }
+    @media (prefers-reduced-motion: reduce) { .rocket, .flame { animation: none; } }
+  </style>
+  <g class="rocket">
+    <path class="flame" d="M27 46h10l-5 13z" fill="#f4a261"/>
+    <path d="M23 34l-7 9 8-1zM41 34l7 9-8-1z" fill="#ee6c4d"/>
+    <path d="M32 5c8 7 11 17 9 30l-4 11H27l-4-11c-2-13 1-23 9-30z" fill="#eef3f9" stroke="#3d5a80" stroke-width="2"/>
+    <circle cx="32" cy="23" r="5" fill="#98c1d9" stroke="#3d5a80" stroke-width="2"/>
+  </g>
+</svg>

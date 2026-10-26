@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "id": "c1", "text": "Team lunch", "dayOffset": 0 },
+    { "id": "c2", "text": "Project check-in", "dayOffset": 1 },
+    { "id": "c3", "text": "Plan next week", "dayOffset": 3 }
+  ]
+}
